@@ -11,6 +11,10 @@ const pages = [
   { path: "/location/?city=dubai", name: "location-dubai" },
   { path: "/reserve/", name: "reserve" },
   { path: "/awards-media/", name: "awards" },
+  { path: "/founders/", name: "founders" },
+  { path: "/sustainability/", name: "sustainability" },
+  { path: "/careers/", name: "careers" },
+  { path: "/privacy-policy/", name: "privacy" },
 ];
 
 const viewports = [
@@ -35,6 +39,10 @@ const screenshotTargets = new Set([
   "ipad-mini-portrait/locations",
   "ipad-landscape/reserve",
   "ipad-landscape/awards",
+  "iphone-13/founders",
+  "iphone-13/careers",
+  "ipad-mini-portrait/sustainability",
+  "desktop-small/privacy",
 ]);
 
 const browser = await chromium.launch({ headless: true });
@@ -47,6 +55,12 @@ for (const viewport of viewports) {
     isMobile: viewport.mobile,
     hasTouch: viewport.mobile,
     deviceScaleFactor: viewport.mobile ? 2 : 1,
+  });
+  await context.addInitScript(() => {
+    window.localStorage.setItem(
+      "mott32CookieChoice",
+      JSON.stringify({ necessary: true, analytics: true, marketing: true, savedAt: "visual-check" }),
+    );
   });
 
   for (const pageInfo of pages) {

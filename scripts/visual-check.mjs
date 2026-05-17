@@ -10,6 +10,10 @@ const pages = [
   { path: "/location/?city=hong-kong", name: "location-detail" },
   { path: "/reserve/", name: "reserve" },
   { path: "/awards-media/", name: "awards" },
+  { path: "/founders/", name: "founders" },
+  { path: "/sustainability/", name: "sustainability" },
+  { path: "/careers/", name: "careers" },
+  { path: "/privacy-policy/", name: "privacy" },
 ];
 
 for (const viewport of [
@@ -18,6 +22,12 @@ for (const viewport of [
 ]) {
   for (const pageInfo of pages) {
     const page = await browser.newPage({ viewport });
+    await page.addInitScript(() => {
+      window.localStorage.setItem(
+        "mott32CookieChoice",
+        JSON.stringify({ necessary: true, analytics: true, marketing: true, savedAt: "visual-check" }),
+      );
+    });
     const url = new URL(pageInfo.path, baseUrl).toString();
     await page.goto(url, { waitUntil: "networkidle" });
     await page.screenshot({ path: `/tmp/mott32-clone-${pageInfo.name}-${viewport.name}.png`, fullPage: true });

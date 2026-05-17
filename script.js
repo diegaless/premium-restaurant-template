@@ -8,6 +8,8 @@ const drawerClose = document.querySelector(".drawer-close");
 const locationRail = document.querySelector("[data-carousel]");
 const lightbox = document.querySelector("[data-lightbox]");
 const locationDetailPage = document.querySelector("[data-location-detail-page]");
+const cookieStorageKey = "mott32CookieChoice";
+let cookieModal = null;
 
 const locationDetails = {
   "hong-kong": {
@@ -125,6 +127,249 @@ const locationDetails = {
 let activePanel = 0;
 let heroTimer = 0;
 let lastActiveElement = null;
+let cookieLastActiveElement = null;
+
+const footerLinks = [
+  { href: "/locations/", label: "All Locations" },
+  { href: "/sustainability/", label: "Sustainability" },
+  { href: "/careers/", label: "Careers" },
+  { href: "/founders/", label: "Founders" },
+  { href: "/our-cuisine/", label: "Our Food" },
+  { href: "/our-drinks/", label: "Our Drinks" },
+  { href: "/awards-media/", label: "Awards & Media" },
+  { href: "/privacy-policy/", label: "Privacy policy" },
+  { href: "mailto:reservations@mott32.com", label: "reservations@mott32.com" },
+];
+
+const drawerLinks = [
+  { href: "/", label: "Home" },
+  { href: "/our-cuisine/", label: "Our Cuisine" },
+  { href: "/our-drinks/", label: "Our Drinks" },
+  { href: "/locations/", label: "Locations" },
+  { href: "/reserve/", label: "Reserve" },
+  { href: "/awards-media/", label: "Awards & Media" },
+  { href: "/founders/", label: "Founders" },
+  { href: "/sustainability/", label: "Sustainability" },
+  { href: "/careers/", label: "Careers" },
+];
+
+function getCurrentPath() {
+  if (window.location.pathname === "/") {
+    return "/";
+  }
+
+  return window.location.pathname.endsWith("/") ? window.location.pathname : `${window.location.pathname}/`;
+}
+
+function createLink(link) {
+  return `<a href="${link.href}">${link.label}</a>`;
+}
+
+function hydrateGlobalNavigation() {
+  const footerNav = document.querySelector(".footer nav");
+  const drawerNav = drawer?.querySelector("nav");
+  const currentPath = getCurrentPath();
+
+  if (footerNav) {
+    footerNav.innerHTML = `${footerLinks.map(createLink).join("")}<button class="footer-link-button" type="button" data-cookie-settings>Cookie settings</button>`;
+  }
+
+  if (drawerNav) {
+    drawerNav.innerHTML = drawerLinks.map(createLink).join("");
+  }
+
+  document.querySelectorAll(".footer nav a, .drawer nav a").forEach((link) => {
+    const linkPath = new URL(link.href, window.location.origin).pathname;
+    const normalisedLinkPath = linkPath === "/" ? "/" : `${linkPath.replace(/\/$/, "")}/`;
+
+    if (normalisedLinkPath === currentPath) {
+      link.setAttribute("aria-current", "page");
+    }
+  });
+}
+
+function getCookieChoice() {
+  try {
+    return JSON.parse(window.localStorage.getItem(cookieStorageKey) || "null");
+  } catch {
+    return null;
+  }
+}
+
+function saveCookieChoice(choice) {
+  try {
+    window.localStorage.setItem(
+      cookieStorageKey,
+      JSON.stringify({
+        ...choice,
+        savedAt: new Date().toISOString(),
+      }),
+    );
+  } catch {
+    return;
+  }
+}
+
+function updateBodyLock() {
+  document.body.classList.toggle(
+    "modal-open",
+    Boolean(
+      drawer?.classList.contains("is-open") ||
+        lightbox?.classList.contains("is-open") ||
+        cookieModal?.classList.contains("is-open"),
+    ),
+  );
+}
+
+function removeCookiePanel() {
+  document.querySelector(".cookie-panel")?.remove();
+}
+
+function createCookiePanel() {
+  if (getCookieChoice() || document.querySelector(".cookie-panel")) {
+    return;
+  }
+
+  const panel = document.createElement("section");
+  panel.className = "cookie-panel";
+  panel.setAttribute("aria-label", "Cookie notice");
+  panel.innerHTML = `
+    <div>
+      <p class="eyebrow">Cookies on our website</p>
+      <p>We use essential cookies to run the site and optional cookies to understand visits and improve marketing.</p>
+    </div>
+    <div class="cookie-actions">
+      <button type="button" data-cookie-accept>Accept recommended cookies</button>
+      <button type="button" data-cookie-reject>Reject</button>
+      <button type="button" data-cookie-settings>Edit settings</button>
+    </div>
+  `;
+
+  document.body.append(panel);
+
+  panel.querySelector("[data-cookie-accept]")?.addEventListener("click", () => {
+    saveCookieChoice({ necessary: true, analytics: true, marketing: true });
+    removeCookiePanel();
+  });
+
+  panel.querySelector("[data-cookie-reject]")?.addEventListener("click", () => {
+    saveCookieChoice({ necessary: true, analytics: false, marketing: false });
+    removeCookiePanel();
+  });
+
+  panel.querySelector("[data-cookie-settings]")?.addEventListener("click", openCookieModal);
+}
+
+function createCookieModal() {
+  if (cookieModal) {
+    return;
+  }
+
+  cookieModal = document.createElement("div");
+  cookieModal.className = "cookie-modal";
+  cookieModal.setAttribute("aria-hidden", "true");
+  cookieModal.setAttribute("role", "dialog");
+  cookieModal.setAttribute("aria-modal", "true");
+  cookieModal.setAttribute("aria-label", "Cookie settings");
+  cookieModal.innerHTML = `
+    <div class="cookie-modal-panel">
+      <button class="cookie-close" type="button" data-cookie-close aria-label="Close cookie settings">×</button>
+      <p class="eyebrow">Cookie settings</p>
+      <h2>Manage preferences</h2>
+      <p>Choose which optional cookies Mott 32 can use on this recreation.</p>
+      <div class="cookie-preferences">
+        <label>
+          <input type="checkbox" checked disabled />
+          <span>Necessary cookies</span>
+          <small>Required for navigation, forms and basic page behaviour.</small>
+        </label>
+        <label>
+          <input type="checkbox" data-cookie-preference="analytics" />
+          <span>Analytics cookies</span>
+          <small>Help measure which pages and features are used.</small>
+        </label>
+        <label>
+          <input type="checkbox" data-cookie-preference="marketing" />
+          <span>Marketing cookies</span>
+          <small>Support tailored campaigns and event invitations.</small>
+        </label>
+      </div>
+      <div class="cookie-modal-actions">
+        <button type="button" data-cookie-save>Save choices</button>
+        <button type="button" data-cookie-accept-all>Accept all</button>
+      </div>
+    </div>
+  `;
+
+  document.body.append(cookieModal);
+
+  cookieModal.querySelector("[data-cookie-close]")?.addEventListener("click", closeCookieModal);
+  cookieModal.addEventListener("click", (event) => {
+    if (event.target === cookieModal) {
+      closeCookieModal();
+    }
+  });
+
+  cookieModal.querySelector("[data-cookie-save]")?.addEventListener("click", () => {
+    const analytics = cookieModal.querySelector('[data-cookie-preference="analytics"]')?.checked || false;
+    const marketing = cookieModal.querySelector('[data-cookie-preference="marketing"]')?.checked || false;
+
+    saveCookieChoice({ necessary: true, analytics, marketing });
+    removeCookiePanel();
+    closeCookieModal();
+  });
+
+  cookieModal.querySelector("[data-cookie-accept-all]")?.addEventListener("click", () => {
+    saveCookieChoice({ necessary: true, analytics: true, marketing: true });
+    removeCookiePanel();
+    closeCookieModal();
+  });
+}
+
+function openCookieModal() {
+  createCookieModal();
+
+  const choice = getCookieChoice();
+  const analytics = cookieModal.querySelector('[data-cookie-preference="analytics"]');
+  const marketing = cookieModal.querySelector('[data-cookie-preference="marketing"]');
+
+  if (analytics) {
+    analytics.checked = Boolean(choice?.analytics);
+  }
+
+  if (marketing) {
+    marketing.checked = Boolean(choice?.marketing);
+  }
+
+  cookieLastActiveElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  cookieModal.classList.add("is-open");
+  cookieModal.setAttribute("aria-hidden", "false");
+  updateBodyLock();
+  cookieModal.querySelector("[data-cookie-close]")?.focus();
+}
+
+function closeCookieModal() {
+  if (!cookieModal) {
+    return;
+  }
+
+  cookieModal.classList.remove("is-open");
+  cookieModal.setAttribute("aria-hidden", "true");
+  updateBodyLock();
+
+  if (cookieLastActiveElement) {
+    cookieLastActiveElement.focus();
+    cookieLastActiveElement = null;
+  }
+}
+
+function ensureCookieControls() {
+  createCookieModal();
+  createCookiePanel();
+  document.querySelectorAll("[data-cookie-settings]").forEach((button) => {
+    button.addEventListener("click", openCookieModal);
+  });
+}
 
 if (locationDetailPage) {
   const requestedCity = new URLSearchParams(window.location.search).get("city") || "hong-kong";
@@ -207,8 +452,11 @@ function setDrawer(open) {
   drawer.classList.toggle("is-open", open);
   drawer.setAttribute("aria-hidden", String(!open));
   navToggle.setAttribute("aria-expanded", String(open));
-  document.body.classList.toggle("modal-open", open || lightbox?.classList.contains("is-open"));
+  updateBodyLock();
 }
+
+hydrateGlobalNavigation();
+ensureCookieControls();
 
 navToggle?.addEventListener("click", () => setDrawer(true));
 drawerClose?.addEventListener("click", () => setDrawer(false));
@@ -286,7 +534,7 @@ function setLightbox(open) {
 
   lightbox.classList.toggle("is-open", open);
   lightbox.setAttribute("aria-hidden", String(!open));
-  document.body.classList.toggle("modal-open", open || drawer?.classList.contains("is-open"));
+  updateBodyLock();
 
   if (!open && lastActiveElement) {
     lastActiveElement.focus();
@@ -326,6 +574,11 @@ lightbox?.addEventListener("click", (event) => {
 
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") {
+    return;
+  }
+
+  if (cookieModal?.classList.contains("is-open")) {
+    closeCookieModal();
     return;
   }
 

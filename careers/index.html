@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Mott 32 careers page recreated with custom HTML, CSS and JavaScript."
+    />
+    <title>Careers | Mott 32</title>
+    <link rel="stylesheet" href="https://use.typekit.net/lmk8hjc.css" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="inner-page careers-page">
+    <main id="top">
+      <section class="hero page-hero careers-hero" aria-label="Mott 32 careers hero">
+        <div class="hero-stage" aria-live="polite">
+          <figure class="hero-panel is-active">
+            <img src="/assets/careers-kitchen.jpg" alt="Mott 32 kitchen" />
+          </figure>
+          <figure class="hero-panel">
+            <img src="/assets/careers-chef-duck.jpg" alt="Chef preparing duck" />
+          </figure>
+          <figure class="hero-panel">
+            <img src="/assets/careers-shirt.jpg" alt="Mott 32 uniform detail" />
+          </figure>
+        </div>
+
+        <button class="side-arrow side-arrow-left" type="button" aria-label="Previous image"></button>
+        <button class="side-arrow side-arrow-right" type="button" aria-label="Next image"></button>
+
+        <img class="main-logo" src="/assets/mott32-main-logo.svg" alt="Mott 32" />
+
+        <div class="hero-dots" aria-label="Hero slide controls">
+          <button class="is-active" type="button" aria-label="Show slide 1"></button>
+          <button type="button" aria-label="Show slide 2"></button>
+          <button type="button" aria-label="Show slide 3"></button>
+        </div>
+      </section>
+
+      <section class="intro patterned page-intro" id="page-content">
+        <div class="section-copy wide-copy">
+          <span class="knot" aria-hidden="true"></span>
+          <p class="eyebrow">Join the team</p>
+          <h1>Careers at Mott 32</h1>
+          <h2>Build a career with one of the world's leading Chinese restaurant brands</h2>
+          <p>
+            Mott 32 teams work across kitchen, bar, service, design-led hospitality and restaurant operations. The
+            brand values craft, creativity and a clear sense of care for every guest.
+          </p>
+        </div>
+      </section>
+
+      <section class="media-carousel-section careers-rail" data-rail-section aria-label="Careers gallery">
+        <button class="rail-arrow rail-arrow-left" type="button" data-rail-prev aria-label="Previous careers image"></button>
+        <div class="image-rail" data-rail>
+          <figure>
+            <img src="/assets/careers-chef-duck.jpg" alt="Chef working with roast duck" />
+            <figcaption>Kitchen craft</figcaption>
+          </figure>
+          <figure>
+            <img src="/assets/careers-chef-whites.jpg" alt="Mott 32 chef in whites" />
+            <figcaption>Professional training</figcaption>
+          </figure>
+          <figure>
+            <img src="/assets/careers-kitchen.jpg" alt="Mott 32 kitchen pass" />
+            <figcaption>Restaurant teams</figcaption>
+          </figure>
+          <figure>
+            <img src="/assets/careers-shirt.jpg" alt="Mott 32 team shirt" />
+            <figcaption>Global standards</figcaption>
+          </figure>
+        </div>
+        <button class="rail-arrow rail-arrow-right" type="button" data-rail-next aria-label="Next careers image"></button>
+      </section>
+
+      <section class="principles patterned careers-principles" aria-label="Why work at Mott 32">
+        <div class="section-heading compact-heading">
+          <span class="crane-mark" aria-hidden="true"></span>
+          <p class="eyebrow">Why work at Mott 32</p>
+          <h2>Craft, culture and growth</h2>
+        </div>
+
+        <div class="principle-grid">
+          <article>
+            <span>01</span>
+            <h3>Creative kitchens</h3>
+            <p>Work with signature Chinese techniques, premium ingredients and exacting presentation standards.</p>
+          </article>
+          <article>
+            <span>02</span>
+            <h3>Service discipline</h3>
+            <p>Develop the calm, detailed service style expected in a luxury restaurant environment.</p>
+          </article>
+          <article>
+            <span>03</span>
+            <h3>Global mobility</h3>
+            <p>Join a growing international restaurant group with opportunities across multiple cities.</p>
+          </article>
+          <article>
+            <span>04</span>
+            <h3>Team culture</h3>
+            <p>Be part of a restaurant floor and kitchen built around trust, pace and shared standards.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="reservation-panel careers-cta">
+        <div>
+          <p class="eyebrow">Interested?</p>
+          <h2>Join our team today</h2>
+          <a class="cut-button" href="mailto:careers@mott32.com?subject=Mott%2032%20Careers%20Enquiry">Email us</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <img src="/assets/mott32-footer-logo.svg" alt="Mott 32" />
+      <nav aria-label="Footer links">
+        <a href="/locations/">All Locations</a>
+        <a href="/our-cuisine/">Our Food</a>
+        <a href="/our-drinks/">Our Drinks</a>
+        <a href="/awards-media/">Awards &amp; Media</a>
+        <a href="mailto:reservations@mott32.com">reservations@mott32.com</a>
+      </nav>
+    </footer>
+
+    <nav class="quick-actions" aria-label="Quick actions">
+      <a href="/reserve/">Reserve</a>
+      <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false">
+        <span></span>
+      </button>
+      <a href="/locations/">All Locations</a>
+    </nav>
+
+    <div class="drawer" aria-hidden="true">
+      <button class="drawer-close" type="button" aria-label="Close menu">×</button>
+      <nav aria-label="Expanded menu">
+        <a href="/">Home</a>
+        <a href="/our-cuisine/">Our Cuisine</a>
+        <a href="/our-drinks/">Our Drinks</a>
+        <a href="/locations/">Locations</a>
+        <a href="/awards-media/">Awards &amp; Media</a>
+      </nav>
+    </div>
+
+    <script src="/script.js" type="module"></script>
+  </body>
+</html>
