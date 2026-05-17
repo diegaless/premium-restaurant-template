@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Mott 32 authentic Asian cuisine page recreated with custom HTML, CSS and JavaScript."
+    />
+    <title>Our Cuisine | Mott 32</title>
+    <link rel="stylesheet" href="https://use.typekit.net/lmk8hjc.css" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="inner-page cuisine-page">
+    <main id="top">
+      <section class="hero page-hero" aria-label="Mott 32 cuisine hero">
+        <div class="hero-stage" aria-live="polite">
+          <figure class="hero-panel is-active">
+            <img src="/assets/cuisine-hero-duck.jpg" alt="Applewood roasted Peking duck" />
+          </figure>
+          <figure class="hero-panel">
+            <img src="/assets/cuisine-hero-platter.jpg" alt="Peking duck and signature dishes" />
+          </figure>
+          <figure class="hero-panel">
+            <img src="/assets/cuisine-signature-duck.jpg" alt="Whole roasted duck at Mott 32" />
+          </figure>
+        </div>
+
+        <button class="side-arrow side-arrow-left" type="button" aria-label="Previous image"></button>
+        <button class="side-arrow side-arrow-right" type="button" aria-label="Next image"></button>
+
+        <img class="main-logo" src="/assets/mott32-main-logo.svg" alt="Mott 32" />
+
+        <div class="hero-dots" aria-label="Hero slide controls">
+          <button class="is-active" type="button" aria-label="Show slide 1"></button>
+          <button type="button" aria-label="Show slide 2"></button>
+          <button type="button" aria-label="Show slide 3"></button>
+        </div>
+      </section>
+
+      <section class="intro patterned page-intro" id="page-content">
+        <div class="section-copy wide-copy">
+          <span class="knot" aria-hidden="true"></span>
+          <p class="eyebrow">Our Food</p>
+          <h1>Authentic Asian Cuisine</h1>
+          <h2>We embrace flavours and ingredients from around Asia and the world</h2>
+          <p>
+            Around the globe, Mott 32 has won over 100 awards for food, drinks and design. The kitchen combines
+            modern technique with Cantonese, Beijing and Szechuan influences, using premium ingredients and
+            time-honoured recipes.
+          </p>
+        </div>
+      </section>
+
+      <section class="media-carousel-section" data-rail-section aria-label="Cuisine image gallery">
+        <button class="rail-arrow rail-arrow-left" type="button" data-rail-prev aria-label="Previous cuisine image"></button>
+        <div class="image-rail" data-rail>
+          <figure>
+            <button
+              class="gallery-trigger"
+              type="button"
+              data-lightbox-trigger
+              data-lightbox-title="Matsutake Mushroom"
+              data-lightbox-copy="Seasonal mushroom, prepared with the precision and restraint of the Mott 32 kitchen."
+              data-lightbox-image="/assets/cuisine-matsutake.jpg"
+            >
+              <img src="/assets/cuisine-matsutake.jpg" alt="Matsutake mushroom dish" />
+            </button>
+            <figcaption>Matsutake Mushroom</figcaption>
+          </figure>
+          <figure>
+            <button
+              class="gallery-trigger"
+              type="button"
+              data-lightbox-trigger
+              data-lightbox-title="Crispy Sugar Coated Peking Duck Bun"
+              data-lightbox-copy="A bamboo charcoal bun with a crisp shell and rich Peking duck filling."
+              data-lightbox-image="/assets/cuisine-duck-bun.jpg"
+            >
+              <img src="/assets/cuisine-duck-bun.jpg" alt="Crispy sugar coated Peking duck bun" />
+            </button>
+            <figcaption>Crispy Duck Bun</figcaption>
+          </figure>
+          <figure>
+            <button
+              class="gallery-trigger"
+              type="button"
+              data-lightbox-trigger
+              data-lightbox-title="Signature Iberico Pluma Char Siu"
+              data-lightbox-copy="Iberico pork glazed and roasted until glossy, smoky and tender."
+              data-lightbox-image="/assets/cuisine-char-siu.jpg"
+            >
+              <img src="/assets/cuisine-char-siu.jpg" alt="Iberico pluma char siu" />
+            </button>
+            <figcaption>Iberico Pluma Char Siu</figcaption>
+          </figure>
+          <figure>
+            <button
+              class="gallery-trigger"
+              type="button"
+              data-lightbox-trigger
+              data-lightbox-title="Prawn and Crab Claw Dumpling"
+              data-lightbox-copy="A refined dim sum signature built around prawn, crab claw and delicate wrapper work."
+              data-lightbox-image="/assets/cuisine-crab-dumpling.jpg"
+            >
+              <img src="/assets/cuisine-crab-dumpling.jpg" alt="Prawn and crab claw dumpling" />
+            </button>
+            <figcaption>Prawn &amp; Crab Claw Dumpling</figcaption>
+          </figure>
+          <figure>
+            <button
+              class="gallery-trigger"
+              type="button"
+              data-lightbox-trigger
+              data-lightbox-title="Supreme Soup Dumpling"
+              data-lightbox-copy="A warming bowl inspired by classic Cantonese stock, steam and deep savoury aromatics."
+              data-lightbox-image="/assets/cuisine-steam-bowl.jpg"
+            >
+              <img src="/assets/cuisine-steam-bowl.jpg" alt="Steamed soup bowl" />
+            </button>
+            <figcaption>Supreme Soup Dumpling</figcaption>
+          </figure>
+        </div>
+        <button class="rail-arrow rail-arrow-right" type="button" data-rail-next aria-label="Next cuisine image"></button>
+      </section>
+
+      <section class="signature-block">
+        <figure class="signature-image">
+          <img src="/assets/cuisine-signature-duck.jpg" alt="Applewood roasted Peking duck" />
+        </figure>
+        <div class="signature-copy">
+          <span class="knot" aria-hidden="true"></span>
+          <p class="eyebrow">Signature Dish</p>
+          <h2>Applewood Roasted Peking Duck</h2>
+          <p>
+            A Mott 32 signature and one of the restaurant's most recognisable dishes: carefully prepared, roasted over
+            applewood, and served with the ritual and precision expected from the brand.
+          </p>
+          <a class="cut-button" href="/reserve/">Reservations</a>
+        </div>
+      </section>
+
+      <section class="menu-browser patterned" id="menu" data-menu-browser>
+        <div class="section-heading compact-heading">
+          <span class="crane-mark" aria-hidden="true"></span>
+          <p class="eyebrow">Explore the menu</p>
+          <h2>Our Cuisine</h2>
+        </div>
+
+        <div class="filter-tabs" role="tablist" aria-label="Cuisine filters">
+          <button class="is-active" type="button" data-filter="all">All</button>
+          <button type="button" data-filter="signature">Signature</button>
+          <button type="button" data-filter="dim-sum">Dim Sum</button>
+          <button type="button" data-filter="barbecue">Barbecue</button>
+          <button type="button" data-filter="seafood">Seafood</button>
+          <button type="button" data-filter="seasonal">Seasonal</button>
+        </div>
+
+        <div class="menu-grid">
+          <article class="menu-card" data-category="signature">
+            <button
+              class="menu-card-trigger"
+              type="button"
+              data-lightbox-trigger
+              data-lightbox-title="Applewood Roasted Peking Duck"
+              data-lightbox-copy="Whole duck, roasted over applewood and finished for crisp skin, depth and fragrance."
+              data-lightbox-image="/assets/cuisine-signature-duck.jpg"
+            >
+              <img src="/assets/cuisine-signature-duck.jpg" alt="Applewood roasted Peking duck" />
+              <span>Signature Dish</span>
+              <strong>Applewood Roasted Peking Duck</strong>
+            </button>
+          </article>
+          <article class="menu-card" data-category="dim-sum">
+            <button
+              class="menu-card-trigger"
+              type="button"
+              data-lightbox-trigger
+              data-lightbox-title="Crispy Sugar Coated Peking Duck Bun"
+              data-lightbox-copy="Bamboo charcoal, crisp sugar coating and roast duck in a compact dim sum format."
+              data-lightbox-image="/assets/cuisine-duck-bun.jpg"
+            >
+              <img src="/assets/cuisine-duck-bun.jpg" alt="Crispy sugar coated Peking duck bun" />
+              <span>Dim Sum</span>
+              <strong>Crispy Sugar Coated Peking Duck Bun</strong>
+            </button>
+          </article>
+          <article class="menu-card" data-category="barbecue">
+            <button
+              class="menu-card-trigger"
+              type="button"
+              data-lightbox-trigger
+              data-lightbox-title="Signature Iberico Pluma Char Siu"
+              data-lightbox-copy="A glossy barbecue classic using Iberico pluma for richness and texture."
+              data-lightbox-image="/assets/cuisine-char-siu.jpg"
+            >
+              <img src="/assets/cuisine-char-siu.jpg" alt="Signature Iberico pluma char siu" />
+              <span>Barbecue</span>
+              <strong>Signature Iberico Pluma Char Siu</strong>
+            </button>
+          </article>
+          <article class="menu-card" data-category="seafood">
+            <button
+              class="menu-card-trigger"
+              type="button"
+              data-lightbox-trigger
+              data-lightbox-title="Prawn and Crab Claw Dumpling"
+              data-lightbox-copy="Prawn and crab in a carefully folded dumpling, built for clean seafood sweetness."
+              data-lightbox-image="/assets/cuisine-crab-dumpling.jpg"
+            >
+              <img src="/assets/cuisine-crab-dumpling.jpg" alt="Prawn and crab claw dumpling" />
+              <span>Seafood</span>
+              <strong>Prawn &amp; Crab Claw Dumpling</strong>
+            </button>
+          </article>
+          <article class="menu-card" data-category="seasonal">
+            <button
+              class="menu-card-trigger"
+              type="button"
+              data-lightbox-trigger
+              data-lightbox-title="Matsutake Mushroom"
+              data-lightbox-copy="Earthy, seasonal mushroom with restrained seasoning and precise cooking."
+              data-lightbox-image="/assets/cuisine-matsutake.jpg"
+            >
+              <img src="/assets/cuisine-matsutake.jpg" alt="Matsutake mushroom dish" />
+              <span>Seasonal</span>
+              <strong>Matsutake Mushroom</strong>
+            </button>
+          </article>
+          <article class="menu-card" data-category="dim-sum">
+            <button
+              class="menu-card-trigger"
+              type="button"
+              data-lightbox-trigger
+              data-lightbox-title="Soft Quail Egg, Iberico Pork, Black Truffle Siu Mai"
+              data-lightbox-copy="A signature siu mai combining Iberico pork, quail egg and black truffle."
+              data-lightbox-image="/assets/food-siumai.jpg"
+            >
+              <img src="/assets/food-siumai.jpg" alt="Soft quail egg and black truffle siu mai" />
+              <span>Dim Sum</span>
+              <strong>Soft Quail Egg, Iberico Pork, Black Truffle Siu Mai</strong>
+            </button>
+          </article>
+        </div>
+      </section>
+
+      <section class="reservation-panel cuisine-reserve">
+        <div>
+          <p class="eyebrow">Want to experience Mott 32 for yourself?</p>
+          <h2>Reserve your table today</h2>
+          <a class="cut-button" href="/reserve/">Reservations</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <img src="/assets/mott32-footer-logo.svg" alt="Mott 32" />
+      <nav aria-label="Footer links">
+        <a href="/locations/">All Locations</a>
+        <a href="/our-cuisine/">Our Food</a>
+        <a href="/our-drinks/">Our Drinks</a>
+        <a href="/awards-media/">Awards &amp; Media</a>
+        <a href="mailto:reservations@mott32.com">reservations@mott32.com</a>
+      </nav>
+    </footer>
+
+    <nav class="quick-actions" aria-label="Quick actions">
+      <a href="/reserve/">Reserve</a>
+      <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false">
+        <span></span>
+      </button>
+      <a href="/locations/">All Locations</a>
+    </nav>
+
+    <div class="drawer" aria-hidden="true">
+      <button class="drawer-close" type="button" aria-label="Close menu">×</button>
+      <nav aria-label="Expanded menu">
+        <a href="/">Home</a>
+        <a href="/our-cuisine/">Our Cuisine</a>
+        <a href="/our-drinks/">Our Drinks</a>
+        <a href="/locations/">Locations</a>
+        <a href="/awards-media/">Awards &amp; Media</a>
+      </nav>
+    </div>
+
+    <div class="lightbox" data-lightbox aria-hidden="true" role="dialog" aria-modal="true" aria-label="Menu item">
+      <button class="lightbox-close" type="button" data-lightbox-close aria-label="Close menu item">×</button>
+      <div class="lightbox-panel">
+        <img data-lightbox-image alt="" />
+        <div>
+          <p class="eyebrow" data-lightbox-kicker>Menu</p>
+          <h2 data-lightbox-title></h2>
+          <p data-lightbox-copy></p>
+        </div>
+      </div>
+    </div>
+
+    <script src="/script.js" type="module"></script>
+  </body>
+</html>

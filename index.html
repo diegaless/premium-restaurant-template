@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Mott 32 luxury Chinese restaurant home page recreated with custom HTML, CSS and JavaScript."
+    />
+    <title>Mott 32 | Award-winning Chinese Restaurant</title>
+    <link rel="stylesheet" href="https://use.typekit.net/lmk8hjc.css" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main id="top">
+      <section class="hero" aria-label="Mott 32 hero">
+        <div class="hero-stage" aria-live="polite">
+          <figure class="hero-panel is-active">
+            <img src="/assets/loc-dubai.jpg" alt="Mott 32 terrace dining room at night" />
+          </figure>
+          <figure class="hero-panel">
+            <img src="/assets/hero-hotel.jpg" alt="Mott 32 dining room" />
+          </figure>
+          <figure class="hero-panel">
+            <img src="/assets/hero-vegas.jpg" alt="Mott 32 Las Vegas dining room" />
+          </figure>
+          <figure class="hero-panel">
+            <img src="/assets/hero-hk.jpg" alt="Mott 32 Hong Kong dining room" />
+          </figure>
+        </div>
+
+        <button class="side-arrow side-arrow-left" type="button" aria-label="Previous image"></button>
+        <button class="side-arrow side-arrow-right" type="button" aria-label="Next image"></button>
+
+        <img class="main-logo" src="/assets/mott32-main-logo.svg" alt="Mott 32" />
+
+        <div class="hero-dots" aria-label="Hero slide controls">
+          <button class="is-active" type="button" aria-label="Show slide 1"></button>
+          <button type="button" aria-label="Show slide 2"></button>
+          <button type="button" aria-label="Show slide 3"></button>
+          <button type="button" aria-label="Show slide 4"></button>
+        </div>
+      </section>
+
+      <section class="intro patterned" id="experience">
+        <div class="section-copy">
+          <span class="knot" aria-hidden="true"></span>
+          <p class="eyebrow">What defines us</p>
+          <h1><em>The</em> Experience</h1>
+          <span class="fine-diamond" aria-hidden="true"></span>
+          <h2>Award-winning Chinese <em>restaurant</em></h2>
+          <p>
+            Mott 32 is one of the most awarded Chinese restaurant brands in the world, offering a wide range of
+            favourites from various regions including Canton, Shanghai and Beijing.
+          </p>
+          <p>
+            Featuring an extensive selection of ingredients from the freshest seafood to homemade dim sum, Kobe and
+            Wagyu beef, and 42-day apple wood roasted Peking duck.
+          </p>
+        </div>
+      </section>
+
+      <section class="locations patterned" id="locations">
+        <div class="section-heading">
+          <span class="crane-mark" aria-hidden="true"></span>
+          <p class="eyebrow">World-class design</p>
+          <h2><em>Our</em> Locations</h2>
+        </div>
+
+        <div class="location-carousel" data-carousel>
+          <article class="location-card">
+            <img src="/assets/loc-hk.jpg" alt="Hong Kong dining room" />
+            <h3>Hong Kong</h3>
+            <p class="han">香港</p>
+            <p>Standard Chartered<br />Bank Building</p>
+          </article>
+          <article class="location-card is-featured">
+            <img src="/assets/loc-vegas.jpg" alt="Las Vegas dining room" />
+            <h3>Las Vegas</h3>
+            <p class="han">拉斯維加斯</p>
+            <p>The Venetian Resort</p>
+          </article>
+          <article class="location-card">
+            <img src="/assets/loc-vancouver.jpg" alt="Vancouver dining room" />
+            <h3>Vancouver</h3>
+            <p class="han">溫哥華</p>
+            <p>1161 W Georgia<br />Street</p>
+          </article>
+          <article class="location-card">
+            <img src="/assets/loc-singapore.jpg" alt="Singapore dining room" />
+            <h3>Singapore</h3>
+            <p class="han">新加坡</p>
+            <p>Marina Bay Sands</p>
+          </article>
+          <article class="location-card">
+            <img src="/assets/loc-dubai.jpg" alt="Dubai dining room" />
+            <h3>Dubai</h3>
+            <p class="han">迪拜</p>
+            <p>Address Beach Resort</p>
+          </article>
+          <article class="location-card">
+            <img src="/assets/loc-toronto.jpg" alt="Toronto bar" />
+            <h3>Toronto</h3>
+            <p class="han">多倫多</p>
+            <p>190 University Avenue</p>
+          </article>
+        </div>
+
+        <a class="cut-button small-button" href="/locations/">All Locations</a>
+      </section>
+
+      <section class="food-strip" aria-label="Cuisine and drinks">
+        <figure class="food-card edge">
+          <img src="/assets/food-crab.jpg" alt="Crab leg dish" />
+          <figcaption>Alaskan King Crab</figcaption>
+        </figure>
+        <figure class="food-card hero-food">
+          <img src="/assets/food-cocktail.jpg" alt="Old Harbour cocktail" />
+          <figcaption>Old Harbour Cocktail</figcaption>
+        </figure>
+        <figure class="food-card small-food">
+          <img src="/assets/food-siumai.jpg" alt="Soft quail egg dumpling" />
+          <figcaption>Soft Quail Egg, Iberico Pork, Black Truffle Dumpling</figcaption>
+        </figure>
+        <figure class="food-card mid-food">
+          <img src="/assets/food-wagyu.jpg" alt="Wagyu beef cheek" />
+          <figcaption>Wagyu Beef Cheek</figcaption>
+        </figure>
+        <figure class="food-card tall-food">
+          <img src="/assets/food-dumpling.jpg" alt="Iberico pork soup dumpling" />
+          <figcaption>Iberico Pork Shanghainese Soup Dumpling</figcaption>
+        </figure>
+      </section>
+
+      <div class="separator" aria-hidden="true"><span></span></div>
+
+      <section class="feature-links patterned" id="drinks">
+        <a class="photo-link" href="/our-cuisine/">
+          <img src="/assets/feature-cuisine.jpg" alt="Peking duck dish" />
+          <span>Authentic Cuisine</span>
+          <small>Our Cuisine</small>
+        </a>
+        <a class="photo-link" href="/our-drinks/">
+          <img src="/assets/feature-drinks.jpg" alt="Blue cocktail glass" />
+          <span>Cocktails</span>
+          <small>Our Drinks</small>
+        </a>
+      </section>
+
+      <section class="awards patterned" id="awards">
+        <div class="award-box">
+          <p class="eyebrow">The world’s most awarded Chinese restaurant</p>
+          <h2>A culinary <em>icon</em> in Chinese cuisine</h2>
+          <div class="award-logos">
+            <img src="/assets/award-top-tables.png" alt="100 Top Tables 2026" />
+            <img src="/assets/award-black-pearl.svg" alt="Black Pearl 2026" />
+            <img src="/assets/award-tatler.svg" alt="Tatler Best 2025" />
+            <img src="/assets/award-trip.svg" alt="Tripadvisor Best of the Best" />
+            <img src="/assets/award-forbes.svg" alt="Forbes Travel Guide 2025" />
+          </div>
+          <a class="cut-button" href="/awards-media/">View all Mott 32 Awards</a>
+        </div>
+      </section>
+
+      <section class="vip-signup" id="vip">
+        <figure>
+          <img src="/assets/vip.jpg" alt="Traditional banquet dish" />
+        </figure>
+        <div class="vip-copy">
+          <p class="eyebrow">Become</p>
+          <h2>A Global VIP</h2>
+          <p>Receive exclusive invitations to events and tastings before everyone else.</p>
+          <form class="signup-form">
+            <label for="email">Email</label>
+            <div>
+              <input id="email" type="email" placeholder="you@example.com" autocomplete="email" />
+              <button type="submit">Sign up</button>
+            </div>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <img src="/assets/mott32-footer-logo.svg" alt="Mott 32" />
+      <nav aria-label="Footer links">
+        <a href="/locations/">All Locations</a>
+        <a href="/our-cuisine/">Our Food</a>
+        <a href="/our-drinks/">Our Drinks</a>
+        <a href="/awards-media/">Awards &amp; Media</a>
+        <a href="mailto:reservations@mott32.com">reservations@mott32.com</a>
+      </nav>
+    </footer>
+
+    <nav class="quick-actions" aria-label="Quick actions">
+      <a href="/reserve/">Reserve</a>
+      <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false">
+        <span></span>
+      </button>
+      <a href="/locations/">All Locations</a>
+    </nav>
+
+    <div class="drawer" aria-hidden="true">
+      <button class="drawer-close" type="button" aria-label="Close menu">×</button>
+      <nav aria-label="Expanded menu">
+        <a href="/">Home</a>
+        <a href="/our-cuisine/">Our Cuisine</a>
+        <a href="/our-drinks/">Our Drinks</a>
+        <a href="/locations/">Locations</a>
+        <a href="/awards-media/">Awards &amp; Media</a>
+      </nav>
+    </div>
+
+    <script src="/script.js" type="module"></script>
+  </body>
+</html>

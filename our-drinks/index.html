@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Mott 32 drinks page recreated with custom HTML, CSS and JavaScript."
+    />
+    <title>Our Drinks | Mott 32</title>
+    <link rel="stylesheet" href="https://use.typekit.net/lmk8hjc.css" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="inner-page drinks-page">
+    <main id="top">
+      <section class="hero page-hero" aria-label="Mott 32 drinks hero">
+        <div class="hero-stage" aria-live="polite">
+          <figure class="hero-panel is-active">
+            <img src="/assets/drinks-blue-glass.jpg" alt="Blue cocktail glass with smoke" />
+          </figure>
+          <figure class="hero-panel">
+            <img src="/assets/drinks-hero-forbidden.jpg" alt="Forbidden Rose cocktail" />
+          </figure>
+          <figure class="hero-panel">
+            <img src="/assets/drinks-old-harbour-hero.jpg" alt="Old Harbour cocktail" />
+          </figure>
+        </div>
+
+        <button class="side-arrow side-arrow-left" type="button" aria-label="Previous image"></button>
+        <button class="side-arrow side-arrow-right" type="button" aria-label="Next image"></button>
+
+        <img class="main-logo" src="/assets/mott32-main-logo.svg" alt="Mott 32" />
+
+        <div class="hero-dots" aria-label="Hero slide controls">
+          <button class="is-active" type="button" aria-label="Show slide 1"></button>
+          <button type="button" aria-label="Show slide 2"></button>
+          <button type="button" aria-label="Show slide 3"></button>
+        </div>
+      </section>
+
+      <section class="intro patterned page-intro" id="page-content">
+        <div class="section-copy wide-copy">
+          <span class="knot" aria-hidden="true"></span>
+          <p class="eyebrow">Cocktails, sake &amp; award-winning wine</p>
+          <h1>Our Drinks</h1>
+          <h2>Innovative cocktails, an extensive sake selection and globally award-winning wine list</h2>
+          <p>
+            Signature cocktails are designed to complement the cooking, drawing inspiration from Asian ingredients
+            including osmanthus honey, ginseng, goji berries, pomelo, shiso, star anise and cardamom.
+          </p>
+        </div>
+      </section>
+
+      <section class="media-carousel-section" data-rail-section aria-label="Drinks image gallery">
+        <button class="rail-arrow rail-arrow-left" type="button" data-rail-prev aria-label="Previous drink image"></button>
+        <div class="image-rail" data-rail>
+          <figure>
+            <button
+              class="gallery-trigger"
+              type="button"
+              data-lightbox-trigger
+              data-lightbox-title="Old Harbour"
+              data-lightbox-copy="A signature cocktail with smoke, spice and layered aromatics."
+              data-lightbox-image="/assets/drinks-old-harbour.jpg"
+            >
+              <img src="/assets/drinks-old-harbour.jpg" alt="Old Harbour cocktail" />
+            </button>
+            <figcaption>Old Harbour</figcaption>
+          </figure>
+          <figure>
+            <button
+              class="gallery-trigger"
+              type="button"
+              data-lightbox-trigger
+              data-lightbox-title="Anna Wong"
+              data-lightbox-copy="A cocktail named for the pioneering screen icon, built with bright fruit and elegant structure."
+              data-lightbox-image="/assets/drinks-anna-wong.jpg"
+            >
+              <img src="/assets/drinks-anna-wong.jpg" alt="Anna Wong cocktail" />
+            </button>
+            <figcaption>Anna Wong</figcaption>
+          </figure>
+          <figure>
+            <button
+              class="gallery-trigger"
+              type="button"
+              data-lightbox-trigger
+              data-lightbox-title="Blue Glass"
+              data-lightbox-copy="A chilled, aromatic cocktail served in cut blue glass."
+              data-lightbox-image="/assets/drinks-blue-detail.jpg"
+            >
+              <img src="/assets/drinks-blue-detail.jpg" alt="Blue glass cocktail" />
+            </button>
+            <figcaption>Blue Glass</figcaption>
+          </figure>
+          <figure>
+            <button
+              class="gallery-trigger"
+              type="button"
+              data-lightbox-trigger
+              data-lightbox-title="Joe's Elixir"
+              data-lightbox-copy="A dramatic cocktail with herbal depth and citrus lift."
+              data-lightbox-image="/assets/drinks-joes-elixir.jpg"
+            >
+              <img src="/assets/drinks-joes-elixir.jpg" alt="Joe's Elixir cocktail" />
+            </button>
+            <figcaption>Joe's Elixir</figcaption>
+          </figure>
+          <figure>
+            <button
+              class="gallery-trigger"
+              type="button"
+              data-lightbox-trigger
+              data-lightbox-title="Forbidden Rose"
+              data-lightbox-copy="Tropical, floral and lightly spiced, inspired by Chinese Valentine's Day."
+              data-lightbox-image="/assets/drinks-forbidden-rose.jpg"
+            >
+              <img src="/assets/drinks-forbidden-rose.jpg" alt="Forbidden Rose cocktail" />
+            </button>
+            <figcaption>Forbidden Rose</figcaption>
+          </figure>
+        </div>
+        <button class="rail-arrow rail-arrow-right" type="button" data-rail-next aria-label="Next drink image"></button>
+      </section>
+
+      <section class="signature-block">
+        <figure class="signature-image">
+          <img src="/assets/drinks-hanami.jpg" alt="Hanami cocktail" />
+        </figure>
+        <div class="signature-copy">
+          <span class="knot" aria-hidden="true"></span>
+          <p class="eyebrow">Signature Drink</p>
+          <h2>Hanami</h2>
+          <p>
+            Inspired by the Japanese custom of viewing cherry blossoms in full bloom. Whisky, gin, umeshu, yuzu,
+            shiso, ginger beer and chrysanthemum create a refreshing floral cocktail with notes of plum.
+          </p>
+          <a class="cut-button" href="#menu">Explore Drinks</a>
+        </div>
+      </section>
+
+      <section class="signature-block reverse">
+        <figure class="signature-image">
+          <img src="/assets/drinks-forbidden-rose.jpg" alt="Forbidden Rose cocktail" />
+        </figure>
+        <div class="signature-copy">
+          <span class="knot" aria-hidden="true"></span>
+          <p class="eyebrow">Signature Drink</p>
+          <h2>Forbidden Rose</h2>
+          <p>
+            A tropical and floral cocktail with pisco, passionfruit, lychee, a hint of chilli and a creamy finish.
+          </p>
+          <a class="cut-button" href="/reserve/">Reservations</a>
+        </div>
+      </section>
+
+      <section class="menu-browser patterned" id="menu" data-menu-browser>
+        <div class="section-heading compact-heading">
+          <span class="crane-mark" aria-hidden="true"></span>
+          <p class="eyebrow">Explore the menu</p>
+          <h2>Our Drinks</h2>
+        </div>
+
+        <div class="filter-tabs" role="tablist" aria-label="Drink filters">
+          <button class="is-active" type="button" data-filter="all">All</button>
+          <button type="button" data-filter="cocktail">Cocktails</button>
+          <button type="button" data-filter="wine">Wine</button>
+          <button type="button" data-filter="sake">Sake</button>
+          <button type="button" data-filter="tea">Tea</button>
+        </div>
+
+        <div class="menu-grid">
+          <article class="menu-card" data-category="cocktail">
+            <button
+              class="menu-card-trigger"
+              type="button"
+              data-lightbox-trigger
+              data-lightbox-title="Hanami"
+              data-lightbox-copy="Whisky, gin, umeshu, yuzu, shiso, ginger beer and chrysanthemum."
+              data-lightbox-image="/assets/drinks-hanami.jpg"
+            >
+              <img src="/assets/drinks-hanami.jpg" alt="Hanami cocktail" />
+              <span>Signature Drink</span>
+              <strong>Hanami</strong>
+            </button>
+          </article>
+          <article class="menu-card" data-category="cocktail">
+            <button
+              class="menu-card-trigger"
+              type="button"
+              data-lightbox-trigger
+              data-lightbox-title="Forbidden Rose"
+              data-lightbox-copy="Pisco, passionfruit, lychee, chilli and a soft floral finish."
+              data-lightbox-image="/assets/drinks-forbidden-rose.jpg"
+            >
+              <img src="/assets/drinks-forbidden-rose.jpg" alt="Forbidden Rose cocktail" />
+              <span>Signature Drink</span>
+              <strong>Forbidden Rose</strong>
+            </button>
+          </article>
+          <article class="menu-card" data-category="tea">
+            <button
+              class="menu-card-trigger"
+              type="button"
+              data-lightbox-trigger
+              data-lightbox-title="Hong Kong Iced Tea"
+              data-lightbox-copy="A cocktail inspired by iced lemon tea and bubble tea, finished with basil seeds."
+              data-lightbox-image="/assets/drinks-hk-iced-tea.jpg"
+            >
+              <img src="/assets/drinks-hk-iced-tea.jpg" alt="Hong Kong Iced Tea cocktail" />
+              <span>Tea Inspired</span>
+              <strong>Hong Kong Iced Tea</strong>
+            </button>
+          </article>
+          <article class="menu-card" data-category="cocktail">
+            <button
+              class="menu-card-trigger"
+              type="button"
+              data-lightbox-trigger
+              data-lightbox-title="Old Harbour"
+              data-lightbox-copy="Smoke, spice and Asian aromatics in a deep, structured serve."
+              data-lightbox-image="/assets/drinks-old-harbour.jpg"
+            >
+              <img src="/assets/drinks-old-harbour.jpg" alt="Old Harbour cocktail" />
+              <span>Cocktail</span>
+              <strong>Old Harbour</strong>
+            </button>
+          </article>
+          <article class="menu-card" data-category="cocktail">
+            <button
+              class="menu-card-trigger"
+              type="button"
+              data-lightbox-trigger
+              data-lightbox-title="Anna Wong"
+              data-lightbox-copy="Bright, elegant and cinematic in spirit, with fruit and floral detail."
+              data-lightbox-image="/assets/drinks-anna-wong.jpg"
+            >
+              <img src="/assets/drinks-anna-wong.jpg" alt="Anna Wong cocktail" />
+              <span>Cocktail</span>
+              <strong>Anna Wong</strong>
+            </button>
+          </article>
+          <article class="menu-card" data-category="wine">
+            <a
+              class="menu-card-trigger"
+              href="https://mott32.com/fileadmin/content/Hong_Kong/Menu_PDFs/MTHK_Menu_Wine_260309.pdf"
+              target="_blank"
+              rel="noopener"
+            >
+              <img src="/assets/drinks-blue-glass.jpg" alt="Wine and cocktail glass detail" />
+              <span>Wine Luxe</span>
+              <strong>Group Restaurant Champion Wine by the Glass</strong>
+            </a>
+          </article>
+          <article class="menu-card" data-category="sake">
+            <button
+              class="menu-card-trigger"
+              type="button"
+              data-lightbox-trigger
+              data-lightbox-title="Sake Selection"
+              data-lightbox-copy="An extensive sake selection designed to sit naturally alongside Cantonese, Beijing and Szechuan flavours."
+              data-lightbox-image="/assets/drinks-blue-detail.jpg"
+            >
+              <img src="/assets/drinks-blue-detail.jpg" alt="Blue glass drink detail" />
+              <span>Sake</span>
+              <strong>Extensive Sake Selection</strong>
+            </button>
+          </article>
+          <article class="menu-card" data-category="cocktail">
+            <button
+              class="menu-card-trigger"
+              type="button"
+              data-lightbox-trigger
+              data-lightbox-title="Joe's Elixir"
+              data-lightbox-copy="Herbal, citrus-led and theatrical, served with Mott 32 bar detail."
+              data-lightbox-image="/assets/drinks-joes-elixir.jpg"
+            >
+              <img src="/assets/drinks-joes-elixir.jpg" alt="Joe's Elixir cocktail" />
+              <span>Cocktail</span>
+              <strong>Joe's Elixir</strong>
+            </button>
+          </article>
+        </div>
+      </section>
+
+      <section class="wine-panel">
+        <div>
+          <p class="eyebrow">Restaurant Awards Wine Luxe</p>
+          <h2>Group Restaurant Champion Wine by the Glass</h2>
+          <p>
+            The wine list presents a curated selection from renowned vineyards, with focus on Old World Bordeaux and
+            Burgundy alongside bottles chosen to complement the food.
+          </p>
+          <a
+            class="cut-button"
+            href="https://mott32.com/fileadmin/content/Hong_Kong/Menu_PDFs/MTHK_Menu_Wine_260309.pdf"
+            target="_blank"
+            rel="noopener"
+          >
+            Wine List
+          </a>
+        </div>
+      </section>
+
+      <section class="reservation-panel drinks-reserve">
+        <div>
+          <p class="eyebrow">Want to experience Mott 32 for yourself?</p>
+          <h2>Reserve your table today</h2>
+          <a class="cut-button" href="/reserve/">Reservations</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <img src="/assets/mott32-footer-logo.svg" alt="Mott 32" />
+      <nav aria-label="Footer links">
+        <a href="/locations/">All Locations</a>
+        <a href="/our-cuisine/">Our Food</a>
+        <a href="/our-drinks/">Our Drinks</a>
+        <a href="/awards-media/">Awards &amp; Media</a>
+        <a href="mailto:reservations@mott32.com">reservations@mott32.com</a>
+      </nav>
+    </footer>
+
+    <nav class="quick-actions" aria-label="Quick actions">
+      <a href="/reserve/">Reserve</a>
+      <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false">
+        <span></span>
+      </button>
+      <a href="/locations/">All Locations</a>
+    </nav>
+
+    <div class="drawer" aria-hidden="true">
+      <button class="drawer-close" type="button" aria-label="Close menu">×</button>
+      <nav aria-label="Expanded menu">
+        <a href="/">Home</a>
+        <a href="/our-cuisine/">Our Cuisine</a>
+        <a href="/our-drinks/">Our Drinks</a>
+        <a href="/locations/">Locations</a>
+        <a href="/awards-media/">Awards &amp; Media</a>
+      </nav>
+    </div>
+
+    <div class="lightbox" data-lightbox aria-hidden="true" role="dialog" aria-modal="true" aria-label="Menu item">
+      <button class="lightbox-close" type="button" data-lightbox-close aria-label="Close menu item">×</button>
+      <div class="lightbox-panel">
+        <img data-lightbox-image alt="" />
+        <div>
+          <p class="eyebrow" data-lightbox-kicker>Menu</p>
+          <h2 data-lightbox-title></h2>
+          <p data-lightbox-copy></p>
+        </div>
+      </div>
+    </div>
+
+    <script src="/script.js" type="module"></script>
+  </body>
+</html>
