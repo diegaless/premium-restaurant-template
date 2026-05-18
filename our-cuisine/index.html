@@ -15,13 +15,13 @@
     <main id="top">
       <section class="hero page-hero" aria-label="Mott 32 cuisine hero">
         <div class="hero-stage" aria-live="polite">
-          <figure class="hero-panel is-active">
+          <figure class="hero-panel is-active" data-slide-label="Peking Duck">
             <img src="/assets/cuisine-hero-duck.jpg" alt="Applewood roasted Peking duck" />
           </figure>
-          <figure class="hero-panel">
+          <figure class="hero-panel" data-slide-label="Three">
             <img src="/assets/cuisine-hero-platter.jpg" alt="Peking duck and signature dishes" />
           </figure>
-          <figure class="hero-panel">
+          <figure class="hero-panel" data-slide-label="Our Cuisine">
             <img src="/assets/cuisine-signature-duck.jpg" alt="Whole roasted duck at Mott 32" />
           </figure>
         </div>
@@ -52,7 +52,15 @@
         </div>
       </section>
 
-      <section class="media-carousel-section" data-rail-section aria-label="Cuisine image gallery">
+      <nav class="page-section-nav patterned" aria-label="Cuisine page sections">
+        <button type="button" data-scroll-target="#gallery">Gallery</button>
+        <button type="button" data-scroll-target="#signature-dishes">Signature Dishes</button>
+        <button type="button" data-scroll-target="#menu">Explore Menu</button>
+        <button type="button" data-scroll-target="#sample-menu">Sample Menu</button>
+        <button type="button" data-scroll-target="#private-dining">Private Dining</button>
+      </nav>
+
+      <section class="media-carousel-section" id="gallery" data-rail-section aria-label="Cuisine image gallery">
         <button class="rail-arrow rail-arrow-left" type="button" data-rail-prev aria-label="Previous cuisine image"></button>
         <div class="image-rail" data-rail>
           <figure>
@@ -124,7 +132,7 @@
         <button class="rail-arrow rail-arrow-right" type="button" data-rail-next aria-label="Next cuisine image"></button>
       </section>
 
-      <section class="signature-block">
+      <section class="signature-block" id="signature-dishes">
         <figure class="signature-image">
           <img src="/assets/cuisine-signature-duck.jpg" alt="Applewood roasted Peking duck" />
         </figure>
@@ -353,7 +361,7 @@
         </div>
       </section>
 
-      <section class="private-dining">
+      <section class="private-dining" id="private-dining">
         <figure>
           <img src="/assets/reserve-bg.jpg" alt="Private dining room at Mott 32" />
         </figure>
@@ -371,7 +379,7 @@
         </div>
       </section>
 
-      <section class="reservation-panel cuisine-reserve">
+      <section class="reservation-panel cuisine-reserve" id="reserve-table">
         <div>
           <p class="eyebrow">Want to experience Mott 32 for yourself?</p>
           <h2>Reserve your table today</h2>

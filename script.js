@@ -1,5 +1,6 @@
 const panels = Array.from(document.querySelectorAll(".hero-panel"));
 const dots = Array.from(document.querySelectorAll(".hero-dots button"));
+let heroLabelButtons = [];
 const previous = document.querySelector(".side-arrow-left");
 const next = document.querySelector(".side-arrow-right");
 const drawer = document.querySelector(".drawer");
@@ -145,6 +146,12 @@ const footerLinks = [
   { href: "mailto:reservations@mott32.com", label: "reservations@mott32.com" },
 ];
 
+const socialLinks = [
+  { href: "https://www.facebook.com/MaximalConcepts/", label: "Facebook" },
+  { href: "https://www.instagram.com/maximalconcepts/?hl=en", label: "Instagram" },
+  { href: "https://xhslink.com/m/ADL46x0Ge5F", label: "Xiaohongshu" },
+];
+
 const drawerLinks = [
   { href: "/", label: "Home" },
   { href: "/our-cuisine/", label: "Our Cuisine" },
@@ -170,9 +177,19 @@ function createLink(link) {
 }
 
 function hydrateGlobalNavigation() {
+  const footer = document.querySelector(".footer");
   const footerNav = document.querySelector(".footer nav");
   const drawerNav = drawer?.querySelector("nav");
   const currentPath = getCurrentPath();
+
+  if (footer && !footer.querySelector(".footer-social")) {
+    footer.querySelector("img")?.insertAdjacentHTML(
+      "afterend",
+      `<div class="footer-social"><p>Social</p>${socialLinks
+        .map((link) => `<a href="${link.href}" target="_blank" rel="noopener">${link.label}</a>`)
+        .join("")}</div>`,
+    );
+  }
 
   if (footerNav) {
     footerNav.innerHTML = `${footerLinks.map(createLink).join("")}<button class="footer-link-button" type="button" data-vip-open>Global VIP</button><button class="footer-link-button" type="button" data-cookie-settings>Cookie settings</button>`;
@@ -532,6 +549,53 @@ function setPanel(index) {
   activePanel = (index + panels.length) % panels.length;
   panels.forEach((panel, panelIndex) => panel.classList.toggle("is-active", panelIndex === activePanel));
   dots.forEach((dot, dotIndex) => dot.classList.toggle("is-active", dotIndex === activePanel));
+  heroLabelButtons.forEach((button, buttonIndex) => {
+    const active = buttonIndex === activePanel;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+}
+
+function getSlideLabel(panel, index) {
+  return panel.dataset.slideLabel || panel.querySelector("img")?.alt?.replace(/^Mott 32\s*/i, "") || `Slide ${index + 1}`;
+}
+
+function createHeroLabels() {
+  if (panels.length < 2 || document.querySelector(".hero-labels")) {
+    return;
+  }
+
+  const hero = panels[0].closest(".hero");
+
+  if (!hero) {
+    return;
+  }
+
+  const list = document.createElement("ol");
+  list.className = "hero-labels";
+  list.setAttribute("aria-label", "Named hero slide controls");
+
+  panels.forEach((panel, index) => {
+    const item = document.createElement("li");
+    const button = document.createElement("button");
+    const label = getSlideLabel(panel, index);
+
+    button.type = "button";
+    button.innerHTML = `<span>${String(index + 1).padStart(2, "0")}</span>${label}`;
+    button.setAttribute("aria-label", `Show ${label}`);
+    button.setAttribute("aria-pressed", String(index === activePanel));
+    button.classList.toggle("is-active", index === activePanel);
+    button.addEventListener("click", () => {
+      setPanel(index);
+      restartHero();
+    });
+
+    item.append(button);
+    list.append(item);
+  });
+
+  hero.append(list);
+  heroLabelButtons = Array.from(list.querySelectorAll("button"));
 }
 
 function restartHero() {
@@ -572,6 +636,7 @@ function setDrawer(open) {
 }
 
 hydrateGlobalNavigation();
+createHeroLabels();
 ensureCookieControls();
 ensureVipControls();
 ensureScrollTop();

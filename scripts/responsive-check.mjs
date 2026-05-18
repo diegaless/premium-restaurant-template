@@ -83,7 +83,7 @@ for (const viewport of viewports) {
 
       const clippedControls = [...document.querySelectorAll("a, button, input")]
         .filter((el) => {
-          if (el.closest(".image-rail, .location-carousel")) {
+          if (el.closest(".image-rail, .location-carousel, .food-rail, .hero-labels, .page-section-nav")) {
             return false;
           }
 

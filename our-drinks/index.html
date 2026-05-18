@@ -15,13 +15,13 @@
     <main id="top">
       <section class="hero page-hero" aria-label="Mott 32 drinks hero">
         <div class="hero-stage" aria-live="polite">
-          <figure class="hero-panel is-active">
+          <figure class="hero-panel is-active" data-slide-label="Blue Glass">
             <img src="/assets/drinks-blue-glass.jpg" alt="Blue cocktail glass with smoke" />
           </figure>
-          <figure class="hero-panel">
+          <figure class="hero-panel" data-slide-label="Forbidden Rose">
             <img src="/assets/drinks-hero-forbidden.jpg" alt="Forbidden Rose cocktail" />
           </figure>
-          <figure class="hero-panel">
+          <figure class="hero-panel" data-slide-label="Old Harbour">
             <img src="/assets/drinks-old-harbour-hero.jpg" alt="Old Harbour cocktail" />
           </figure>
         </div>
@@ -51,7 +51,15 @@
         </div>
       </section>
 
-      <section class="media-carousel-section" data-rail-section aria-label="Drinks image gallery">
+      <nav class="page-section-nav patterned" aria-label="Drinks page sections">
+        <button type="button" data-scroll-target="#gallery">Gallery</button>
+        <button type="button" data-scroll-target="#signature-drinks">Signature Drinks</button>
+        <button type="button" data-scroll-target="#menu">Explore Menu</button>
+        <button type="button" data-scroll-target="#wine-list">Wine List</button>
+        <button type="button" data-scroll-target="#reserve-table">Reservations</button>
+      </nav>
+
+      <section class="media-carousel-section" id="gallery" data-rail-section aria-label="Drinks image gallery">
         <button class="rail-arrow rail-arrow-left" type="button" data-rail-prev aria-label="Previous drink image"></button>
         <div class="image-rail" data-rail>
           <figure>
@@ -123,7 +131,7 @@
         <button class="rail-arrow rail-arrow-right" type="button" data-rail-next aria-label="Next drink image"></button>
       </section>
 
-      <section class="signature-block">
+      <section class="signature-block" id="signature-drinks">
         <figure class="signature-image">
           <img src="/assets/drinks-hanami.jpg" alt="Hanami cocktail" />
         </figure>
@@ -299,7 +307,7 @@
         </div>
       </section>
 
-      <section class="wine-panel">
+      <section class="wine-panel" id="wine-list">
         <div>
           <p class="eyebrow">Restaurant Awards Wine Luxe</p>
           <h2>Group Restaurant Champion Wine by the Glass</h2>
@@ -318,7 +326,7 @@
         </div>
       </section>
 
-      <section class="reservation-panel drinks-reserve">
+      <section class="reservation-panel drinks-reserve" id="reserve-table">
         <div>
           <p class="eyebrow">Want to experience Mott 32 for yourself?</p>
           <h2>Reserve your table today</h2>

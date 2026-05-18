@@ -162,6 +162,57 @@ input {
   background: var(--gold-light);
 }
 
+.hero-labels {
+  position: absolute;
+  z-index: 5;
+  left: clamp(22px, 5vw, 78px);
+  bottom: 118px;
+  display: grid;
+  gap: 11px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hero-labels button {
+  display: grid;
+  grid-template-columns: 28px minmax(0, auto);
+  gap: 13px;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  color: rgba(255, 255, 255, 0.68);
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  letter-spacing: 3px;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.hero-labels span {
+  color: var(--gold);
+  font-size: 12px;
+}
+
+.hero-labels button::after {
+  content: "";
+  width: 0;
+  height: 1px;
+  background: var(--gold);
+  transition: width 180ms ease;
+}
+
+.hero-labels button.is-active,
+.hero-labels button:hover,
+.hero-labels button:focus-visible {
+  color: var(--white);
+}
+
+.hero-labels button.is-active::after {
+  width: 68px;
+}
+
 .quick-actions {
   position: fixed;
   z-index: 60;
@@ -700,7 +751,7 @@ em {
 
 .footer {
   display: grid;
-  grid-template-columns: 260px 1fr;
+  grid-template-columns: 220px minmax(140px, 0.6fr) 1fr;
   gap: 36px;
   align-items: start;
   padding: 52px clamp(22px, 5vw, 82px) 116px;
@@ -718,6 +769,26 @@ em {
   gap: 12px 32px;
   color: rgba(255, 255, 255, 0.76);
   font-size: 14px;
+}
+
+.footer-social {
+  display: grid;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 14px;
+}
+
+.footer-social p {
+  margin: 0 0 5px;
+  color: var(--gold);
+  font-size: 12px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.footer-social a:hover,
+.footer-social a:focus-visible {
+  color: var(--gold-light);
 }
 
 .footer nav a,
@@ -1026,6 +1097,37 @@ em {
 .filter-tabs button.is-active,
 .filter-tabs button:hover,
 .filter-tabs button:focus-visible {
+  color: var(--blue-deep);
+  background: var(--gold-light);
+}
+
+.page-section-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px max(18px, calc((100vw - 1040px) / 2));
+  border-top: 1px solid rgba(164, 145, 109, 0.24);
+  border-bottom: 1px solid rgba(164, 145, 109, 0.34);
+}
+
+.page-section-nav button {
+  min-height: 36px;
+  padding: 7px 16px;
+  border: 1px solid rgba(164, 145, 109, 0.68);
+  color: var(--white);
+  background: rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.page-section-nav button:hover,
+.page-section-nav button:focus-visible {
   color: var(--blue-deep);
   background: var(--gold-light);
 }
@@ -2105,6 +2207,39 @@ body.modal-open {
     bottom: 112px;
   }
 
+  .hero-labels {
+    left: 22px;
+    right: 22px;
+    bottom: 178px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .hero-labels::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hero-labels button {
+    grid-template-columns: auto;
+    min-width: max-content;
+    padding: 6px 8px;
+    border: 1px solid rgba(164, 145, 109, 0.5);
+    background: rgba(0, 0, 0, 0.32);
+    font-size: 11px;
+    letter-spacing: 1.5px;
+  }
+
+  .hero-labels button::after {
+    display: none;
+  }
+
+  .hero-labels span {
+    display: none;
+  }
+
   .quick-actions {
     bottom: 28px;
     grid-template-columns: 1fr 86px 1fr;
@@ -2190,6 +2325,15 @@ body.modal-open {
     grid-template-columns: 1fr;
   }
 
+  .footer-social {
+    grid-template-columns: repeat(3, max-content);
+    gap: 10px 18px;
+  }
+
+  .footer-social p {
+    grid-column: 1 / -1;
+  }
+
   .drawer a {
     font-size: clamp(26px, 8.4vw, 42px);
     letter-spacing: 5px;
@@ -2246,6 +2390,25 @@ body.modal-open {
 
   .menu-browser {
     padding: 72px 18px 104px;
+  }
+
+  .page-section-nav {
+    position: static;
+    justify-content: flex-start;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-left: 18px;
+    padding-right: 18px;
+    scrollbar-width: none;
+  }
+
+  .page-section-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .page-section-nav button {
+    min-width: max-content;
+    font-size: 12px;
   }
 
   .menu-grid {
