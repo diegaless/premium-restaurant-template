@@ -1132,6 +1132,27 @@ em {
   background: var(--gold-light);
 }
 
+.page-section-nav button.is-active,
+.page-section-nav button[aria-current="true"] {
+  color: var(--blue-deep);
+  background: var(--gold-light);
+  box-shadow: 0 0 0 1px rgba(198, 178, 130, 0.26);
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 720ms ease var(--reveal-delay, 0ms),
+    transform 720ms ease var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+.reveal.is-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .menu-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1357,6 +1378,14 @@ em {
 
 .global-reserve::before {
   background-image: url("/assets/reserve-bg.jpg");
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }
 
 .page-heading {

@@ -690,6 +690,146 @@ document.querySelectorAll("[data-scroll-target]").forEach((button) => {
   });
 });
 
+function setSectionNavActive(nav, targetSelector, options = {}) {
+  const { behavior = "smooth" } = options;
+  const activeButton = nav.querySelector(`[data-scroll-target="${targetSelector}"]`);
+
+  nav.querySelectorAll("[data-scroll-target]").forEach((button) => {
+    const active = button === activeButton;
+
+    button.classList.toggle("is-active", active);
+
+    if (active) {
+      button.setAttribute("aria-current", "true");
+    } else {
+      button.removeAttribute("aria-current");
+    }
+  });
+
+  if (activeButton && nav.scrollWidth > nav.clientWidth) {
+    const left = activeButton.offsetLeft - nav.clientWidth / 2 + activeButton.clientWidth / 2;
+    nav.scrollTo({ left: Math.max(0, left), behavior });
+  }
+}
+
+function ensureSectionNavState() {
+  document.querySelectorAll(".page-section-nav").forEach((nav) => {
+    const buttons = Array.from(nav.querySelectorAll("[data-scroll-target]"));
+    const sections = buttons
+      .map((button) => document.querySelector(button.dataset.scrollTarget))
+      .filter((section) => section?.id);
+
+    if (!sections.length) {
+      return;
+    }
+
+    const getCurrentSection = () => {
+      const activationLine = Math.max(130, window.innerHeight * 0.24);
+
+      return sections.reduce((active, section) => {
+        return section.getBoundingClientRect().top <= activationLine ? section : active;
+      }, sections[0]);
+    };
+
+    const updateActiveSection = () => {
+      setSectionNavActive(nav, `#${getCurrentSection().id}`, { behavior: "auto" });
+    };
+
+    let frame = 0;
+    const queueUpdate = () => {
+      if (frame) {
+        return;
+      }
+
+      frame = window.requestAnimationFrame(() => {
+        frame = 0;
+        updateActiveSection();
+      });
+    };
+
+    setSectionNavActive(nav, `#${sections[0].id}`, { behavior: "auto" });
+
+    nav.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-scroll-target]");
+
+      if (button) {
+        setSectionNavActive(nav, button.dataset.scrollTarget);
+      }
+    });
+
+    window.addEventListener("scroll", queueUpdate, { passive: true });
+    window.addEventListener("resize", queueUpdate);
+    updateActiveSection();
+  });
+}
+
+function ensureScrollReveal() {
+  const targets = Array.from(
+    document.querySelectorAll(
+      [
+        ".section-copy",
+        ".section-heading",
+        ".location-card",
+        ".food-card",
+        ".photo-link",
+        ".award-box",
+        ".award-tile",
+        ".vip-copy",
+        ".vip-signup figure",
+        ".signature-block",
+        ".menu-card",
+        ".sample-panel",
+        ".private-dining > *",
+        ".wine-panel > div",
+        ".reservation-panel > div",
+        ".founder-card",
+        ".principle-grid article",
+        ".career-panel",
+        ".privacy-content",
+        ".location-detail-block > *",
+      ].join(", "),
+    ),
+  );
+
+  if (!targets.length) {
+    return;
+  }
+
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  targets.forEach((target, index) => {
+    target.classList.add("reveal");
+    target.style.setProperty("--reveal-delay", `${Math.min(index % 4, 3) * 80}ms`);
+  });
+
+  if (reducedMotion || !("IntersectionObserver" in window)) {
+    targets.forEach((target) => target.classList.add("is-revealed"));
+    return;
+  }
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) {
+          return;
+        }
+
+        entry.target.classList.add("is-revealed");
+        observer.unobserve(entry.target);
+      });
+    },
+    {
+      rootMargin: "0px 0px -10% 0px",
+      threshold: 0.14,
+    },
+  );
+
+  targets.forEach((target) => observer.observe(target));
+}
+
+ensureSectionNavState();
+ensureScrollReveal();
+
 document.querySelectorAll("[data-menu-browser]").forEach((browser) => {
   const filters = Array.from(browser.querySelectorAll("[data-filter]"));
   const cards = Array.from(browser.querySelectorAll(".menu-card"));
