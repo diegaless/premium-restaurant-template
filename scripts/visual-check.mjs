@@ -27,6 +27,7 @@ for (const viewport of [
         "mott32CookieChoice",
         JSON.stringify({ necessary: true, analytics: true, marketing: true, savedAt: "visual-check" }),
       );
+      window.sessionStorage.setItem("mott32VipSeen", "1");
     });
     const url = new URL(pageInfo.path, baseUrl).toString();
     await page.goto(url, { waitUntil: "networkidle" });

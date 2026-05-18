@@ -68,68 +68,84 @@
         </div>
 
         <div class="location-carousel" data-carousel>
-          <article class="location-card">
+          <a class="location-card" href="/location/?city=hong-kong">
             <img src="/assets/loc-hk.jpg" alt="Hong Kong dining room" />
             <h3>Hong Kong</h3>
             <p class="han">香港</p>
             <p>Standard Chartered<br />Bank Building</p>
-          </article>
-          <article class="location-card is-featured">
+          </a>
+          <a class="location-card is-featured" href="/location/?city=las-vegas">
             <img src="/assets/loc-vegas.jpg" alt="Las Vegas dining room" />
             <h3>Las Vegas</h3>
             <p class="han">拉斯維加斯</p>
             <p>The Venetian Resort</p>
-          </article>
-          <article class="location-card">
+          </a>
+          <a class="location-card" href="/location/?city=vancouver">
             <img src="/assets/loc-vancouver.jpg" alt="Vancouver dining room" />
             <h3>Vancouver</h3>
             <p class="han">溫哥華</p>
             <p>1161 W Georgia<br />Street</p>
-          </article>
-          <article class="location-card">
+          </a>
+          <a class="location-card" href="/location/?city=singapore">
             <img src="/assets/loc-singapore.jpg" alt="Singapore dining room" />
             <h3>Singapore</h3>
             <p class="han">新加坡</p>
             <p>Marina Bay Sands</p>
-          </article>
-          <article class="location-card">
+          </a>
+          <a class="location-card" href="/location/?city=dubai">
             <img src="/assets/loc-dubai.jpg" alt="Dubai dining room" />
             <h3>Dubai</h3>
             <p class="han">迪拜</p>
             <p>Address Beach Resort</p>
-          </article>
-          <article class="location-card">
+          </a>
+          <a class="location-card" href="/location/?city=toronto">
             <img src="/assets/loc-toronto.jpg" alt="Toronto bar" />
             <h3>Toronto</h3>
             <p class="han">多倫多</p>
             <p>190 University Avenue</p>
-          </article>
+          </a>
         </div>
 
         <a class="cut-button small-button" href="/locations/">All Locations</a>
       </section>
 
-      <section class="food-strip" aria-label="Cuisine and drinks">
-        <figure class="food-card edge">
-          <img src="/assets/food-crab.jpg" alt="Crab leg dish" />
-          <figcaption>Alaskan King Crab</figcaption>
-        </figure>
-        <figure class="food-card hero-food">
-          <img src="/assets/food-cocktail.jpg" alt="Old Harbour cocktail" />
-          <figcaption>Old Harbour Cocktail</figcaption>
-        </figure>
-        <figure class="food-card small-food">
-          <img src="/assets/food-siumai.jpg" alt="Soft quail egg dumpling" />
-          <figcaption>Soft Quail Egg, Iberico Pork, Black Truffle Dumpling</figcaption>
-        </figure>
-        <figure class="food-card mid-food">
-          <img src="/assets/food-wagyu.jpg" alt="Wagyu beef cheek" />
-          <figcaption>Wagyu Beef Cheek</figcaption>
-        </figure>
-        <figure class="food-card tall-food">
-          <img src="/assets/food-dumpling.jpg" alt="Iberico pork soup dumpling" />
-          <figcaption>Iberico Pork Shanghainese Soup Dumpling</figcaption>
-        </figure>
+      <section class="food-strip" data-rail-section aria-label="Cuisine and drinks">
+        <button class="rail-arrow rail-arrow-left" type="button" data-rail-prev aria-label="Previous dish"></button>
+        <div class="food-rail" data-rail>
+          <figure class="food-card">
+            <img src="/assets/food-cocktail.jpg" alt="Old Harbour cocktail" />
+            <figcaption>Old Harbour Cocktail</figcaption>
+          </figure>
+          <figure class="food-card">
+            <img src="/assets/food-siumai.jpg" alt="Soft quail egg dumpling" />
+            <figcaption>Soft Quail Egg, Iberico Pork, Black Truffle Dumpling</figcaption>
+          </figure>
+          <figure class="food-card">
+            <img src="/assets/food-wagyu.jpg" alt="Wagyu beef cheek" />
+            <figcaption>Wagyu Beef Cheek</figcaption>
+          </figure>
+          <figure class="food-card">
+            <img src="/assets/food-dumpling.jpg" alt="Iberico pork soup dumpling" />
+            <figcaption>Iberico Pork Shanghainese Soup Dumpling</figcaption>
+          </figure>
+          <figure class="food-card">
+            <img src="/assets/food-crab.jpg" alt="Baked Alaskan crab leg" />
+            <figcaption>Baked Alaskan Crab Leg</figcaption>
+          </figure>
+          <figure class="food-card">
+            <img src="/assets/food-pork.jpg" alt="Crispy roasted pork belly" />
+            <figcaption>Crispy Roasted Pork Belly</figcaption>
+          </figure>
+          <figure class="food-card">
+            <img src="/assets/drinks-hk-iced-tea.jpg" alt="Hong Kong Iced Tea" />
+            <figcaption>Hong Kong Iced Tea</figcaption>
+          </figure>
+          <figure class="food-card">
+            <img src="/assets/cuisine-char-siu.jpg" alt="Signature Iberico pluma char siu" />
+            <figcaption>Signature Iberico Pluma Char Siu</figcaption>
+          </figure>
+        </div>
+        <button class="rail-arrow rail-arrow-right" type="button" data-rail-next aria-label="Next dish"></button>
       </section>
 
       <div class="separator" aria-hidden="true"><span></span></div>

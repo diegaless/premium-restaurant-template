@@ -61,6 +61,7 @@ for (const viewport of viewports) {
       "mott32CookieChoice",
       JSON.stringify({ necessary: true, analytics: true, marketing: true, savedAt: "visual-check" }),
     );
+    window.sessionStorage.setItem("mott32VipSeen", "1");
   });
 
   for (const pageInfo of pages) {

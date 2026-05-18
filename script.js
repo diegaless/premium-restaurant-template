@@ -9,7 +9,9 @@ const locationRail = document.querySelector("[data-carousel]");
 const lightbox = document.querySelector("[data-lightbox]");
 const locationDetailPage = document.querySelector("[data-location-detail-page]");
 const cookieStorageKey = "mott32CookieChoice";
+const vipStorageKey = "mott32VipSeen";
 let cookieModal = null;
+let vipModal = null;
 
 const locationDetails = {
   "hong-kong": {
@@ -128,6 +130,8 @@ let activePanel = 0;
 let heroTimer = 0;
 let lastActiveElement = null;
 let cookieLastActiveElement = null;
+let vipLastActiveElement = null;
+let activeLightboxIndex = -1;
 
 const footerLinks = [
   { href: "/locations/", label: "All Locations" },
@@ -171,7 +175,7 @@ function hydrateGlobalNavigation() {
   const currentPath = getCurrentPath();
 
   if (footerNav) {
-    footerNav.innerHTML = `${footerLinks.map(createLink).join("")}<button class="footer-link-button" type="button" data-cookie-settings>Cookie settings</button>`;
+    footerNav.innerHTML = `${footerLinks.map(createLink).join("")}<button class="footer-link-button" type="button" data-vip-open>Global VIP</button><button class="footer-link-button" type="button" data-cookie-settings>Cookie settings</button>`;
   }
 
   if (drawerNav) {
@@ -216,7 +220,8 @@ function updateBodyLock() {
     Boolean(
       drawer?.classList.contains("is-open") ||
         lightbox?.classList.contains("is-open") ||
-        cookieModal?.classList.contains("is-open"),
+        cookieModal?.classList.contains("is-open") ||
+        vipModal?.classList.contains("is-open"),
     ),
   );
 }
@@ -371,6 +376,117 @@ function ensureCookieControls() {
   });
 }
 
+function createVipModal() {
+  if (vipModal) {
+    return;
+  }
+
+  vipModal = document.createElement("div");
+  vipModal.className = "vip-modal";
+  vipModal.setAttribute("aria-hidden", "true");
+  vipModal.setAttribute("role", "dialog");
+  vipModal.setAttribute("aria-modal", "true");
+  vipModal.setAttribute("aria-label", "Global VIP signup");
+  vipModal.innerHTML = `
+    <div class="vip-modal-panel">
+      <button class="vip-close" type="button" data-vip-close aria-label="Close Global VIP signup">×</button>
+      <figure>
+        <img src="/assets/vip.jpg" alt="Traditional banquet dish" />
+      </figure>
+      <div class="vip-modal-copy">
+        <p class="eyebrow">Become</p>
+        <h2>A Global VIP</h2>
+        <p>Receive exclusive invitations to events and tastings before everyone else.</p>
+        <form class="signup-form vip-modal-form">
+          <label for="vip-email">Email</label>
+          <div>
+            <input id="vip-email" type="email" placeholder="you@example.com" autocomplete="email" required />
+            <button type="submit">Sign up</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+
+  document.body.append(vipModal);
+
+  vipModal.querySelector("[data-vip-close]")?.addEventListener("click", closeVipModal);
+  vipModal.addEventListener("click", (event) => {
+    if (event.target === vipModal) {
+      closeVipModal();
+    }
+  });
+}
+
+function openVipModal() {
+  createVipModal();
+  vipLastActiveElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  vipModal.classList.add("is-open");
+  vipModal.setAttribute("aria-hidden", "false");
+  updateBodyLock();
+  vipModal.querySelector("[data-vip-close]")?.focus();
+
+  try {
+    window.sessionStorage.setItem(vipStorageKey, "1");
+  } catch {
+    return;
+  }
+}
+
+function closeVipModal() {
+  if (!vipModal) {
+    return;
+  }
+
+  vipModal.classList.remove("is-open");
+  vipModal.setAttribute("aria-hidden", "true");
+  updateBodyLock();
+
+  if (vipLastActiveElement) {
+    vipLastActiveElement.focus();
+    vipLastActiveElement = null;
+  }
+}
+
+function ensureVipControls() {
+  createVipModal();
+  document.querySelectorAll("[data-vip-open]").forEach((button) => {
+    button.addEventListener("click", openVipModal);
+  });
+
+  window.setTimeout(() => {
+    try {
+      if (window.sessionStorage.getItem(vipStorageKey)) {
+        return;
+      }
+    } catch {
+      return;
+    }
+
+    if (!drawer?.classList.contains("is-open") && !lightbox?.classList.contains("is-open") && !cookieModal?.classList.contains("is-open")) {
+      openVipModal();
+    }
+  }, 3600);
+}
+
+function ensureScrollTop() {
+  const scrollTop = document.createElement("button");
+  scrollTop.className = "scroll-top";
+  scrollTop.type = "button";
+  scrollTop.setAttribute("aria-label", "Scroll to top");
+  document.body.append(scrollTop);
+
+  const updateScrollTop = () => {
+    scrollTop.classList.toggle("is-visible", window.scrollY > window.innerHeight * 0.8);
+  };
+
+  scrollTop.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+  window.addEventListener("scroll", updateScrollTop, { passive: true });
+  updateScrollTop();
+}
+
 if (locationDetailPage) {
   const requestedCity = new URLSearchParams(window.location.search).get("city") || "hong-kong";
   const location = locationDetails[requestedCity] || locationDetails["hong-kong"];
@@ -457,14 +573,20 @@ function setDrawer(open) {
 
 hydrateGlobalNavigation();
 ensureCookieControls();
+ensureVipControls();
+ensureScrollTop();
 
 navToggle?.addEventListener("click", () => setDrawer(true));
 drawerClose?.addEventListener("click", () => setDrawer(false));
 drawer?.querySelectorAll("a").forEach((link) => link.addEventListener("click", () => setDrawer(false)));
 
-document.querySelector(".signup-form")?.addEventListener("submit", (event) => {
+document.addEventListener("submit", (event) => {
+  if (!event.target.matches(".signup-form")) {
+    return;
+  }
+
   event.preventDefault();
-  event.currentTarget.querySelector("button").textContent = "Thank you";
+  event.target.querySelector("button").textContent = "Thank you";
 });
 
 if (locationRail) {
@@ -527,6 +649,36 @@ document.querySelectorAll("[data-menu-browser]").forEach((browser) => {
   });
 });
 
+document.querySelectorAll("[data-accordion]").forEach((accordion) => {
+  const panels = Array.from(accordion.querySelectorAll(".sample-panel"));
+
+  panels.forEach((panel) => {
+    const button = panel.querySelector("button");
+    const content = panel.querySelector("div");
+
+    button?.addEventListener("click", () => {
+      const isOpen = panel.classList.contains("is-open");
+
+      panels.forEach((item) => {
+        const itemButton = item.querySelector("button");
+        const itemContent = item.querySelector("div");
+        const shouldOpen = item === panel && !isOpen;
+
+        item.classList.toggle("is-open", shouldOpen);
+        itemButton?.setAttribute("aria-expanded", String(shouldOpen));
+
+        if (itemContent) {
+          itemContent.hidden = !shouldOpen;
+        }
+      });
+    });
+
+    if (content) {
+      content.hidden = !panel.classList.contains("is-open");
+    }
+  });
+});
+
 function setLightbox(open) {
   if (!lightbox) {
     return;
@@ -542,24 +694,63 @@ function setLightbox(open) {
   }
 }
 
-document.querySelectorAll("[data-lightbox-trigger]").forEach((trigger) => {
+const lightboxTriggers = Array.from(document.querySelectorAll("[data-lightbox-trigger]"));
+
+function renderLightbox(trigger) {
+  if (!lightbox || !trigger) {
+    return;
+  }
+
+  const image = lightbox.querySelector("[data-lightbox-image]");
+  const title = lightbox.querySelector("[data-lightbox-title]");
+  const copy = lightbox.querySelector("[data-lightbox-copy]");
+  const kicker = lightbox.querySelector("[data-lightbox-kicker]");
+  const label = trigger.querySelector("span")?.textContent?.trim() || "Menu";
+
+  image.src = trigger.dataset.lightboxImage;
+  image.alt = trigger.dataset.lightboxTitle || "";
+  title.textContent = trigger.dataset.lightboxTitle || "";
+  copy.textContent = trigger.dataset.lightboxCopy || "";
+  kicker.textContent = label;
+}
+
+function showLightboxAt(index) {
+  if (!lightboxTriggers.length) {
+    return;
+  }
+
+  activeLightboxIndex = (index + lightboxTriggers.length) % lightboxTriggers.length;
+  renderLightbox(lightboxTriggers[activeLightboxIndex]);
+}
+
+function ensureLightboxControls() {
+  if (!lightbox || lightbox.querySelector(".lightbox-nav")) {
+    return;
+  }
+
+  const controls = document.createElement("div");
+  controls.className = "lightbox-nav";
+  controls.innerHTML = `
+    <button type="button" data-lightbox-prev aria-label="Previous item">Previous</button>
+    <button type="button" data-lightbox-next aria-label="Next item">Next</button>
+  `;
+  lightbox.querySelector(".lightbox-panel")?.append(controls);
+
+  controls.querySelector("[data-lightbox-prev]")?.addEventListener("click", () => showLightboxAt(activeLightboxIndex - 1));
+  controls.querySelector("[data-lightbox-next]")?.addEventListener("click", () => showLightboxAt(activeLightboxIndex + 1));
+}
+
+ensureLightboxControls();
+
+lightboxTriggers.forEach((trigger, index) => {
   trigger.addEventListener("click", () => {
     if (!lightbox) {
       return;
     }
 
     lastActiveElement = trigger;
-    const image = lightbox.querySelector("[data-lightbox-image]");
-    const title = lightbox.querySelector("[data-lightbox-title]");
-    const copy = lightbox.querySelector("[data-lightbox-copy]");
-    const kicker = lightbox.querySelector("[data-lightbox-kicker]");
-    const label = trigger.querySelector("span")?.textContent?.trim() || "Menu";
-
-    image.src = trigger.dataset.lightboxImage;
-    image.alt = trigger.dataset.lightboxTitle || "";
-    title.textContent = trigger.dataset.lightboxTitle || "";
-    copy.textContent = trigger.dataset.lightboxCopy || "";
-    kicker.textContent = label;
+    activeLightboxIndex = index;
+    renderLightbox(trigger);
     setLightbox(true);
     lightbox.querySelector("[data-lightbox-close]")?.focus();
   });
@@ -573,7 +764,22 @@ lightbox?.addEventListener("click", (event) => {
 });
 
 document.addEventListener("keydown", (event) => {
+  if (lightbox?.classList.contains("is-open") && event.key === "ArrowLeft") {
+    showLightboxAt(activeLightboxIndex - 1);
+    return;
+  }
+
+  if (lightbox?.classList.contains("is-open") && event.key === "ArrowRight") {
+    showLightboxAt(activeLightboxIndex + 1);
+    return;
+  }
+
   if (event.key !== "Escape") {
+    return;
+  }
+
+  if (vipModal?.classList.contains("is-open")) {
+    closeVipModal();
     return;
   }
 
