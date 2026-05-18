@@ -504,6 +504,12 @@ em {
   pointer-events: none;
 }
 
+.cut-button.is-disabled,
+.cut-button[aria-disabled="true"] {
+  opacity: 0.58;
+  pointer-events: none;
+}
+
 .small-button {
   left: 50%;
   margin-bottom: 74px;
@@ -528,6 +534,13 @@ em {
   scroll-behavior: smooth;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
+}
+
+.food-rail.is-dragging,
+.image-rail.is-dragging {
+  cursor: grabbing;
+  scroll-snap-type: none;
+  user-select: none;
 }
 
 .food-rail::-webkit-scrollbar {
@@ -840,7 +853,13 @@ em {
   overflow: auto;
   padding: 12px 24px;
   text-align: center;
+  transform: translateY(18px);
+  transition: transform 360ms ease;
   scrollbar-width: none;
+}
+
+.drawer.is-open nav {
+  transform: translateY(0);
 }
 
 .drawer nav::-webkit-scrollbar {
@@ -852,10 +871,41 @@ em {
   line-height: 1.05;
   letter-spacing: 8px;
   text-transform: uppercase;
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    color 180ms ease,
+    opacity 320ms ease,
+    transform 320ms ease;
 }
 
 .drawer a[aria-current="page"] {
   color: var(--gold-light);
+}
+
+.drawer.is-open a {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.drawer.is-open a:nth-child(2) {
+  transition-delay: 40ms;
+}
+
+.drawer.is-open a:nth-child(3) {
+  transition-delay: 80ms;
+}
+
+.drawer.is-open a:nth-child(4) {
+  transition-delay: 120ms;
+}
+
+.drawer.is-open a:nth-child(5) {
+  transition-delay: 160ms;
+}
+
+.drawer.is-open a:nth-child(6) {
+  transition-delay: 200ms;
 }
 
 .drawer-close {
@@ -1073,6 +1123,73 @@ em {
 .compact-heading {
   padding-top: 0;
   padding-bottom: 34px;
+}
+
+.menu-location-controls,
+.reserve-page-tools,
+.location-directory-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: center;
+  gap: 14px;
+  max-width: 980px;
+  margin: 0 auto 34px;
+}
+
+.select-control,
+.search-control {
+  display: grid;
+  gap: 8px;
+  min-width: min(270px, 100%);
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.select-control span,
+.search-control span {
+  color: var(--gold);
+  font-size: 12px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.select-control select,
+.search-control input {
+  min-height: 44px;
+  width: 100%;
+  border: 1px solid rgba(164, 145, 109, 0.72);
+  color: var(--white);
+  background: rgba(0, 0, 0, 0.3);
+  padding: 9px 13px;
+}
+
+.select-control option {
+  color: var(--blue-deep);
+}
+
+.menu-location-controls p,
+.location-directory-tools p {
+  max-width: 320px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 14px;
+}
+
+.menu-pdf-links {
+  display: flex;
+  align-items: end;
+}
+
+.menu-pdf-links .small-button {
+  left: auto;
+  margin-bottom: 0;
+  transform: none;
+}
+
+.menu-empty-state {
+  margin: 32px auto 0;
+  color: rgba(255, 255, 255, 0.72);
+  text-align: center;
 }
 
 .filter-tabs {
@@ -1440,6 +1557,55 @@ em {
   background: var(--gold-light);
 }
 
+.location-map-panel {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.8fr) minmax(320px, 1.2fr);
+  gap: 34px;
+  align-items: center;
+  max-width: 1080px;
+  margin: 0 auto 68px;
+  padding: 28px;
+  border: 1px solid rgba(164, 145, 109, 0.54);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.location-map-panel h2 {
+  margin: 0;
+  font-size: clamp(28px, 3.6vw, 44px);
+  line-height: 1.16;
+}
+
+.map-region-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.map-region-list button {
+  display: grid;
+  gap: 8px;
+  min-height: 94px;
+  padding: 14px;
+  border: 1px solid rgba(164, 145, 109, 0.66);
+  color: var(--white);
+  background: rgba(2, 8, 11, 0.36);
+  cursor: pointer;
+  text-align: left;
+}
+
+.map-region-list span {
+  color: var(--gold-light);
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.map-region-list strong {
+  font-size: 34px;
+  font-weight: 300;
+  line-height: 1;
+}
+
 .region-section {
   max-width: 1120px;
   margin: 0 auto;
@@ -1567,6 +1733,31 @@ em {
   font-size: 14px;
 }
 
+.location-meta {
+  display: grid;
+  gap: 8px;
+  width: 86%;
+  margin: 0 0 16px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  text-align: left;
+}
+
+.location-meta div {
+  display: grid;
+  grid-template-columns: 62px minmax(0, 1fr);
+  gap: 8px;
+}
+
+.location-meta dt {
+  color: var(--gold);
+  text-transform: uppercase;
+}
+
+.location-meta dd {
+  margin: 0;
+}
+
 .coming-soon img {
   filter: brightness(0.66) saturate(0.82);
 }
@@ -1636,16 +1827,84 @@ em {
 
 .reserve-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(220px, 310px));
-  gap: 32px 86px;
+  grid-template-columns: repeat(2, minmax(260px, 1fr));
+  gap: 22px;
   justify-content: center;
-  max-width: 760px;
+  max-width: 980px;
   margin: 0 auto;
+}
+
+.reserve-card {
+  display: grid;
+  grid-template-columns: 156px minmax(0, 1fr);
+  gap: 22px;
+  align-items: stretch;
+  min-height: 210px;
+  padding: 16px;
+  border: 1px solid rgba(164, 145, 109, 0.6);
+  background: rgba(2, 8, 11, 0.34);
+  clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 14px);
+}
+
+.reserve-card.compact {
+  grid-template-columns: 150px minmax(0, 1fr);
+  min-height: 0;
+}
+
+.reserve-card img {
+  width: 100%;
+  height: 100%;
+  min-height: 178px;
+  object-fit: cover;
+  filter: brightness(0.82) contrast(1.05);
+}
+
+.reserve-card h3 {
+  margin: 0 0 12px;
+  font-size: clamp(23px, 3vw, 34px);
+  line-height: 1.12;
+}
+
+.reserve-card h3 span {
+  display: block;
+  color: var(--gold-light);
+  font-size: 17px;
+  letter-spacing: 2px;
+}
+
+.reserve-card p:not(.eyebrow) {
+  margin: 0 0 14px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.reserve-card dl,
+.location-facts {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 18px;
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.reserve-card dl div,
+.location-facts div {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.reserve-card dt,
+.location-facts dt {
+  color: var(--gold);
+  text-transform: uppercase;
+}
+
+.reserve-card dd,
+.location-facts dd {
+  margin: 0;
 }
 
 .reserve-link {
   min-height: 46px;
-  width: 100%;
   padding: 8px 22px;
   font-size: 18px;
   letter-spacing: 1px;
@@ -1654,6 +1913,71 @@ em {
 
 .reserve-link span {
   margin-left: 6px;
+}
+
+.reserve-status {
+  display: inline-grid;
+  place-items: center;
+  min-height: 38px;
+  width: fit-content;
+  padding: 8px 14px;
+  border: 1px solid rgba(164, 145, 109, 0.68);
+  color: var(--gold-light);
+  text-transform: uppercase;
+}
+
+.reserve-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 116;
+  display: grid;
+  place-items: center;
+  visibility: hidden;
+  padding: 22px;
+  opacity: 0;
+  pointer-events: none;
+  background: rgba(1, 7, 10, 0.88);
+  transition: opacity 180ms ease;
+}
+
+.reserve-modal.is-open {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.reserve-modal-panel {
+  position: relative;
+  width: min(880px, 100%);
+  max-height: calc(100svh - 44px);
+  overflow: auto;
+  padding: clamp(24px, 4vw, 38px);
+  border: 1px solid var(--gold);
+  background:
+    linear-gradient(90deg, rgba(10, 37, 61, 0.97), rgba(2, 8, 11, 0.99)),
+    var(--blue-deep);
+}
+
+.reserve-close {
+  position: absolute;
+  top: 10px;
+  right: 18px;
+  border: 0;
+  color: var(--gold);
+  background: transparent;
+  font-size: 44px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.reserve-modal-detail {
+  margin-top: 22px;
+}
+
+.reserve-full-link {
+  display: inline-block;
+  margin-top: 22px;
+  color: var(--gold-light);
 }
 
 .awards-hero .hero-panel img {
@@ -1774,6 +2098,13 @@ em {
   width: 100%;
   max-height: calc(100vh - 142px);
   object-fit: cover;
+  transition: transform 260ms ease;
+  transform-origin: center;
+}
+
+.lightbox.is-zoomed .lightbox-panel > img {
+  transform: scale(1.18);
+  cursor: zoom-out;
 }
 
 .lightbox-panel h2 {
@@ -1802,6 +2133,7 @@ em {
 .lightbox-nav {
   grid-column: 2;
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
   margin-top: -6px;
 }
@@ -1815,6 +2147,48 @@ em {
   cursor: pointer;
   letter-spacing: 2px;
   text-transform: uppercase;
+}
+
+.lightbox-counter {
+  grid-column: 2;
+  margin: 0;
+  color: var(--gold-light);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.lightbox-thumbs {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 72px;
+  gap: 10px;
+  overflow-x: auto;
+  padding-top: 8px;
+  scrollbar-width: none;
+}
+
+.lightbox-thumbs::-webkit-scrollbar {
+  display: none;
+}
+
+.lightbox-thumbs button {
+  padding: 0;
+  border: 1px solid rgba(164, 145, 109, 0.45);
+  background: transparent;
+  cursor: pointer;
+  opacity: 0.58;
+}
+
+.lightbox-thumbs button.is-active {
+  opacity: 1;
+  border-color: var(--gold-light);
+}
+
+.lightbox-thumbs img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
 }
 
 body.modal-open {
@@ -2421,6 +2795,21 @@ body.modal-open {
     padding: 72px 18px 104px;
   }
 
+  .menu-location-controls,
+  .reserve-page-tools,
+  .location-directory-tools {
+    align-items: stretch;
+    justify-content: stretch;
+  }
+
+  .select-control,
+  .search-control,
+  .menu-location-controls p,
+  .location-directory-tools p {
+    min-width: 100%;
+    max-width: none;
+  }
+
   .page-section-nav {
     position: static;
     justify-content: flex-start;
@@ -2463,6 +2852,11 @@ body.modal-open {
   .lightbox-nav {
     grid-column: 1;
     justify-content: center;
+  }
+
+  .lightbox-counter {
+    grid-column: 1;
+    text-align: center;
   }
 
   .sample-menu {
@@ -2508,6 +2902,17 @@ body.modal-open {
     padding: 4px 18px 68px;
   }
 
+  .location-map-panel {
+    grid-template-columns: 1fr;
+    margin-left: 18px;
+    margin-right: 18px;
+    padding: 22px;
+  }
+
+  .map-region-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .location-grid,
   .location-grid.compact {
     grid-template-columns: 1fr;
@@ -2530,8 +2935,27 @@ body.modal-open {
   }
 
   .reserve-grid {
-    grid-template-columns: minmax(0, 286px);
-    gap: 28px;
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .reserve-card,
+  .reserve-card.compact {
+    grid-template-columns: 1fr;
+  }
+
+  .reserve-card img {
+    min-height: 210px;
+    max-height: 260px;
+  }
+
+  .reserve-modal {
+    padding: 14px;
+  }
+
+  .reserve-modal-panel {
+    max-height: calc(100svh - 28px);
+    padding: 22px;
   }
 
   .award-wall {

@@ -11,8 +11,13 @@ const lightbox = document.querySelector("[data-lightbox]");
 const locationDetailPage = document.querySelector("[data-location-detail-page]");
 const cookieStorageKey = "mott32CookieChoice";
 const vipStorageKey = "mott32VipSeen";
+const vipStateStorageKey = "mott32VipState";
 let cookieModal = null;
 let vipModal = null;
+let reserveModal = null;
+let drawerLastActiveElement = null;
+let reserveLastActiveElement = null;
+let reserveDelegationReady = false;
 
 const locationDetails = {
   "hong-kong": {
@@ -127,12 +132,235 @@ const locationDetails = {
   },
 };
 
+Object.assign(locationDetails, {
+  bali: {
+    name: "Bali",
+    han: "峇里島",
+    region: "Asia",
+    address: "Opening 2027",
+    image: "/assets/loc-bali.jpg",
+    reserve: "",
+    intro: "Bali is planned as a future Mott 32 destination.",
+    copy: "Opening details will follow closer to launch.",
+  },
+  scottsdale: {
+    name: "Scottsdale",
+    han: "斯科茨代爾",
+    region: "North America",
+    address: "Opening 2026",
+    image: "/assets/loc-scottsdale.jpg",
+    reserve: "",
+    intro: "Scottsdale is planned as a future North American location.",
+    copy: "Opening details will follow closer to launch.",
+  },
+  riyadh: {
+    name: "Riyadh",
+    han: "利雅德",
+    region: "Middle East",
+    address: "Opening 2027",
+    image: "/assets/loc-riyadh.jpg",
+    reserve: "",
+    intro: "Riyadh is planned as a future Middle East location.",
+    copy: "Opening details will follow closer to launch.",
+  },
+  melbourne: {
+    name: "Melbourne",
+    han: "墨爾本",
+    region: "Australia",
+    address: "Opening 2026",
+    image: "/assets/loc-melbourne.jpg",
+    reserve: "",
+    intro: "Melbourne is planned as a future Australian location.",
+    copy: "Opening details will follow closer to launch.",
+  },
+});
+
+const locationMeta = {
+  "hong-kong": {
+    status: "open",
+    hours: "Lunch and dinner daily",
+    phone: "+852 2885 8688",
+    email: "reservations@mott32.com",
+    menuNote: "Full signature menu, wine list and cocktail programme.",
+    cuisinePdf: "",
+    drinksPdf: "https://mott32.com/fileadmin/content/Hong_Kong/Menu_PDFs/MTHK_Menu_Wine_260309.pdf",
+  },
+  singapore: {
+    status: "open",
+    hours: "Lunch and dinner daily",
+    phone: "+65 6688 9922",
+    email: "reservations@mott32.com",
+    menuNote: "Marina Bay Sands menus and reservations are handled by the resort.",
+  },
+  bangkok: {
+    status: "open",
+    hours: "Dinner daily",
+    phone: "+66 2 085 8888",
+    email: "reservations@mott32.com",
+    menuNote: "Bangkok signatures and high-rise dining.",
+  },
+  seoul: {
+    status: "open",
+    hours: "Lunch and dinner daily",
+    phone: "+82 2 6282 0320",
+    email: "reservations@mott32.com",
+    menuNote: "Seoul menu and booking are handled by Josun Hotel.",
+  },
+  cebu: {
+    status: "open",
+    hours: "Lunch and dinner daily",
+    phone: "+63 32 888 8282",
+    email: "reservations@mott32.com",
+    menuNote: "Resort dining with signature food and cocktail selections.",
+  },
+  "las-vegas": {
+    status: "open",
+    hours: "Dinner daily",
+    phone: "+1 702 607 3232",
+    email: "reservations@mott32.com",
+    menuNote: "Las Vegas reservations are handled through SevenRooms.",
+  },
+  vancouver: {
+    status: "open",
+    hours: "Dinner daily",
+    phone: "+1 604 979 8886",
+    email: "reservations@mott32.com",
+    menuNote: "Vancouver reservations are handled through OpenTable.",
+  },
+  toronto: {
+    status: "open",
+    hours: "Dinner daily",
+    phone: "+1 416 555 0032",
+    email: "reservations@mott32.com",
+    menuNote: "Toronto reservations are handled through Tablz.",
+  },
+  dubai: {
+    status: "open",
+    hours: "Lunch and dinner daily",
+    phone: "+971 4 278 4832",
+    email: "reservations@mott32.com",
+    menuNote: "Dubai offers terrace dining, cocktails and skyline views.",
+  },
+  "los-angeles": {
+    status: "coming-soon",
+    opening: "Opening 2026",
+    hours: "Coming soon",
+    phone: "",
+    email: "reservations@mott32.com",
+    menuNote: "Menus will be announced closer to opening.",
+  },
+  bali: {
+    status: "coming-soon",
+    opening: "Opening 2027",
+    hours: "Coming soon",
+    phone: "",
+    email: "reservations@mott32.com",
+    menuNote: "Menus will be announced closer to opening.",
+  },
+  scottsdale: {
+    status: "coming-soon",
+    opening: "Opening 2026",
+    hours: "Coming soon",
+    phone: "",
+    email: "reservations@mott32.com",
+    menuNote: "Menus will be announced closer to opening.",
+  },
+  riyadh: {
+    status: "coming-soon",
+    opening: "Opening 2027",
+    hours: "Coming soon",
+    phone: "",
+    email: "reservations@mott32.com",
+    menuNote: "Menus will be announced closer to opening.",
+  },
+  melbourne: {
+    status: "coming-soon",
+    opening: "Opening 2026",
+    hours: "Coming soon",
+    phone: "",
+    email: "reservations@mott32.com",
+    menuNote: "Menus will be announced closer to opening.",
+  },
+};
+
+Object.entries(locationMeta).forEach(([slug, meta]) => {
+  if (locationDetails[slug]) {
+    Object.assign(locationDetails[slug], meta, { slug });
+  }
+});
+
+const locationOrder = [
+  "hong-kong",
+  "las-vegas",
+  "vancouver",
+  "singapore",
+  "dubai",
+  "toronto",
+  "bangkok",
+  "seoul",
+  "cebu",
+  "los-angeles",
+  "scottsdale",
+  "bali",
+  "riyadh",
+  "melbourne",
+];
+
+const menuAvailability = {
+  "Applewood Roasted Peking Duck": ["hong-kong", "las-vegas", "vancouver", "singapore", "dubai", "bangkok", "seoul"],
+  "Crispy Sugar Coated Peking Duck Bun": ["hong-kong", "las-vegas", "vancouver", "dubai", "cebu"],
+  "Signature Iberico Pluma Char Siu": ["hong-kong", "vancouver", "singapore", "dubai", "toronto", "bangkok"],
+  "Prawn & Crab Claw Dumpling": ["hong-kong", "las-vegas", "singapore", "dubai", "cebu", "seoul"],
+  "Prawn and Crab Claw Dumpling": ["hong-kong", "las-vegas", "singapore", "dubai", "cebu", "seoul"],
+  "Matsutake Mushroom": ["hong-kong", "singapore", "dubai", "seoul"],
+  "Soft Quail Egg, Iberico Pork, Black Truffle Siu Mai": ["hong-kong", "las-vegas", "vancouver", "singapore", "dubai"],
+  Hanami: ["hong-kong", "las-vegas", "vancouver", "singapore", "dubai", "bangkok"],
+  "Forbidden Rose": ["hong-kong", "las-vegas", "vancouver", "singapore", "dubai", "toronto"],
+  "Hong Kong Iced Tea": ["hong-kong", "vancouver", "singapore", "dubai", "cebu"],
+  "Old Harbour": ["hong-kong", "las-vegas", "dubai", "bangkok", "seoul"],
+  "Anna Wong": ["hong-kong", "vancouver", "singapore", "toronto"],
+  "Group Restaurant Champion Wine by the Glass": ["hong-kong", "las-vegas", "vancouver", "singapore", "dubai"],
+  "Sake Selection": ["hong-kong", "las-vegas", "singapore", "seoul"],
+  "Joe's Elixir": ["hong-kong", "las-vegas", "dubai", "toronto"],
+};
+
+const vipVariants = [
+  {
+    id: "global",
+    image: "/assets/vip.jpg",
+    eyebrow: "Become",
+    title: "A Global VIP",
+    copy: "Receive exclusive invitations to events and tastings before everyone else.",
+    fieldLabel: "Email",
+    cta: "Sign up",
+  },
+  {
+    id: "tastings",
+    image: "/assets/cuisine-hero-platter.jpg",
+    eyebrow: "Private tastings",
+    title: "First access to seasonal menus",
+    copy: "Be notified about chef tastings, wine dinners and limited menus across the Mott 32 family.",
+    fieldLabel: "Email",
+    cta: "Join the list",
+  },
+  {
+    id: "events",
+    image: "/assets/drinks-hero-forbidden.jpg",
+    eyebrow: "Cocktails & events",
+    title: "Invitations before release",
+    copy: "Join the Global VIP list for cocktail previews, openings and special event announcements.",
+    fieldLabel: "Email",
+    cta: "Become VIP",
+  },
+];
+
 let activePanel = 0;
 let heroTimer = 0;
 let lastActiveElement = null;
 let cookieLastActiveElement = null;
 let vipLastActiveElement = null;
 let activeLightboxIndex = -1;
+let activeLightboxZoomed = false;
 
 const footerLinks = [
   { href: "/locations/", label: "All Locations" },
@@ -231,6 +459,85 @@ function saveCookieChoice(choice) {
   }
 }
 
+function getLocations(options = {}) {
+  const { includeComingSoon = true } = options;
+
+  return locationOrder
+    .map((slug) => locationDetails[slug])
+    .filter(Boolean)
+    .filter((location) => includeComingSoon || location.status === "open");
+}
+
+function getLocationBySlug(slug) {
+  return locationDetails[slug] || locationDetails["hong-kong"];
+}
+
+function getReservableLocations() {
+  return getLocations({ includeComingSoon: false }).filter((location) => Boolean(location.reserve));
+}
+
+function getLocationStatusLabel(location) {
+  if (location.status === "open") {
+    return "Reserve";
+  }
+
+  return location.opening || "Coming soon";
+}
+
+function getFocusableElements(root) {
+  if (!root) {
+    return [];
+  }
+
+  return Array.from(
+    root.querySelectorAll(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    ),
+  ).filter((element) => element.offsetParent !== null || element === document.activeElement);
+}
+
+function trapFocus(event, root) {
+  if (event.key !== "Tab" || !root) {
+    return;
+  }
+
+  const focusable = getFocusableElements(root);
+
+  if (!focusable.length) {
+    event.preventDefault();
+    return;
+  }
+
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
+}
+
+function setDialogOpen(dialog, open, trigger, focusSelector) {
+  if (!dialog) {
+    return;
+  }
+
+  dialog.classList.toggle("is-open", open);
+  dialog.setAttribute("aria-hidden", String(!open));
+  updateBodyLock();
+
+  if (open) {
+    const focusTarget = focusSelector ? dialog.querySelector(focusSelector) : getFocusableElements(dialog)[0];
+    focusTarget?.focus();
+    return;
+  }
+
+  trigger?.focus?.();
+}
+
 function updateBodyLock() {
   document.body.classList.toggle(
     "modal-open",
@@ -238,7 +545,8 @@ function updateBodyLock() {
       drawer?.classList.contains("is-open") ||
         lightbox?.classList.contains("is-open") ||
         cookieModal?.classList.contains("is-open") ||
-        vipModal?.classList.contains("is-open"),
+        vipModal?.classList.contains("is-open") ||
+        reserveModal?.classList.contains("is-open"),
     ),
   );
 }
@@ -272,11 +580,13 @@ function createCookiePanel() {
   panel.querySelector("[data-cookie-accept]")?.addEventListener("click", () => {
     saveCookieChoice({ necessary: true, analytics: true, marketing: true });
     removeCookiePanel();
+    document.dispatchEvent(new CustomEvent("mott32:cookies-saved"));
   });
 
   panel.querySelector("[data-cookie-reject]")?.addEventListener("click", () => {
     saveCookieChoice({ necessary: true, analytics: false, marketing: false });
     removeCookiePanel();
+    document.dispatchEvent(new CustomEvent("mott32:cookies-saved"));
   });
 
   panel.querySelector("[data-cookie-settings]")?.addEventListener("click", openCookieModal);
@@ -339,12 +649,14 @@ function createCookieModal() {
     saveCookieChoice({ necessary: true, analytics, marketing });
     removeCookiePanel();
     closeCookieModal();
+    document.dispatchEvent(new CustomEvent("mott32:cookies-saved"));
   });
 
   cookieModal.querySelector("[data-cookie-accept-all]")?.addEventListener("click", () => {
     saveCookieChoice({ necessary: true, analytics: true, marketing: true });
     removeCookiePanel();
     closeCookieModal();
+    document.dispatchEvent(new CustomEvent("mott32:cookies-saved"));
   });
 }
 
@@ -408,17 +720,17 @@ function createVipModal() {
     <div class="vip-modal-panel">
       <button class="vip-close" type="button" data-vip-close aria-label="Close Global VIP signup">×</button>
       <figure>
-        <img src="/assets/vip.jpg" alt="Traditional banquet dish" />
+        <img data-vip-image src="/assets/vip.jpg" alt="Traditional banquet dish" />
       </figure>
       <div class="vip-modal-copy">
-        <p class="eyebrow">Become</p>
-        <h2>A Global VIP</h2>
-        <p>Receive exclusive invitations to events and tastings before everyone else.</p>
+        <p class="eyebrow" data-vip-eyebrow>Become</p>
+        <h2 data-vip-title>A Global VIP</h2>
+        <p data-vip-copy>Receive exclusive invitations to events and tastings before everyone else.</p>
         <form class="signup-form vip-modal-form">
-          <label for="vip-email">Email</label>
+          <label for="vip-email" data-vip-label>Email</label>
           <div>
             <input id="vip-email" type="email" placeholder="you@example.com" autocomplete="email" required />
-            <button type="submit">Sign up</button>
+            <button type="submit" data-vip-cta>Sign up</button>
           </div>
         </form>
       </div>
@@ -435,13 +747,61 @@ function createVipModal() {
   });
 }
 
-function openVipModal() {
+function getVipState() {
+  try {
+    return JSON.parse(window.localStorage.getItem(vipStateStorageKey) || "null");
+  } catch {
+    return null;
+  }
+}
+
+function saveVipState(state) {
+  try {
+    window.localStorage.setItem(vipStateStorageKey, JSON.stringify(state));
+  } catch {
+    return;
+  }
+}
+
+function getNextVipVariant() {
+  const state = getVipState();
+  const currentIndex = vipVariants.findIndex((variant) => variant.id === state?.variant);
+  return vipVariants[(currentIndex + 1 + vipVariants.length) % vipVariants.length];
+}
+
+function renderVipVariant(variant) {
+  if (!vipModal || !variant) {
+    return;
+  }
+
+  const image = vipModal.querySelector("[data-vip-image]");
+  const eyebrow = vipModal.querySelector("[data-vip-eyebrow]");
+  const title = vipModal.querySelector("[data-vip-title]");
+  const copy = vipModal.querySelector("[data-vip-copy]");
+  const label = vipModal.querySelector("[data-vip-label]");
+  const cta = vipModal.querySelector("[data-vip-cta]");
+
+  if (image) {
+    image.src = variant.image;
+    image.alt = variant.title;
+  }
+
+  if (eyebrow) eyebrow.textContent = variant.eyebrow;
+  if (title) title.textContent = variant.title;
+  if (copy) copy.textContent = variant.copy;
+  if (label) label.textContent = variant.fieldLabel;
+  if (cta) cta.textContent = variant.cta;
+}
+
+function openVipModal(variant = getNextVipVariant()) {
   createVipModal();
+  renderVipVariant(variant);
   vipLastActiveElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-  vipModal.classList.add("is-open");
-  vipModal.setAttribute("aria-hidden", "false");
-  updateBodyLock();
-  vipModal.querySelector("[data-vip-close]")?.focus();
+  setDialogOpen(vipModal, true, null, "[data-vip-close]");
+  saveVipState({
+    variant: variant.id,
+    openedAt: new Date().toISOString(),
+  });
 
   try {
     window.sessionStorage.setItem(vipStorageKey, "1");
@@ -455,12 +815,9 @@ function closeVipModal() {
     return;
   }
 
-  vipModal.classList.remove("is-open");
-  vipModal.setAttribute("aria-hidden", "true");
-  updateBodyLock();
+  setDialogOpen(vipModal, false, vipLastActiveElement);
 
   if (vipLastActiveElement) {
-    vipLastActiveElement.focus();
     vipLastActiveElement = null;
   }
 }
@@ -468,22 +825,470 @@ function closeVipModal() {
 function ensureVipControls() {
   createVipModal();
   document.querySelectorAll("[data-vip-open]").forEach((button) => {
-    button.addEventListener("click", openVipModal);
+    button.addEventListener("click", () => openVipModal());
   });
 
-  window.setTimeout(() => {
+  let queued = false;
+  const canOpen = () => {
     try {
       if (window.sessionStorage.getItem(vipStorageKey)) {
-        return;
+        return false;
       }
     } catch {
+      return false;
+    }
+
+    const savedAt = Date.parse(getVipState()?.openedAt || "");
+    const sevenDays = 7 * 24 * 60 * 60 * 1000;
+
+    return (
+      (!savedAt || Date.now() - savedAt > sevenDays) &&
+      !drawer?.classList.contains("is-open") &&
+      !lightbox?.classList.contains("is-open") &&
+      !cookieModal?.classList.contains("is-open") &&
+      !reserveModal?.classList.contains("is-open") &&
+      !document.querySelector(".cookie-panel")
+    );
+  };
+
+  const maybeOpen = () => {
+    if (queued || !canOpen()) {
       return;
     }
 
-    if (!drawer?.classList.contains("is-open") && !lightbox?.classList.contains("is-open") && !cookieModal?.classList.contains("is-open")) {
-      openVipModal();
+    queued = true;
+    window.setTimeout(() => {
+      queued = false;
+      if (canOpen()) {
+        openVipModal();
+      }
+    }, 900);
+  };
+
+  window.setTimeout(maybeOpen, 4200);
+  window.addEventListener(
+    "scroll",
+    () => {
+      if (window.scrollY > window.innerHeight * 0.38) {
+        maybeOpen();
+      }
+    },
+    { passive: true, once: true },
+  );
+
+  document.addEventListener("mott32:cookies-saved", () => {
+    if (!window.sessionStorage.getItem(vipStorageKey)) {
+      window.setTimeout(maybeOpen, 1200);
     }
-  }, 3600);
+  });
+}
+
+function createReserveCard(location, compact = false) {
+  const statusLabel = getLocationStatusLabel(location);
+  const isOpen = location.status === "open" && location.reserve;
+  const action = isOpen
+    ? `<a class="cut-button reserve-link" href="${location.reserve}" target="_blank" rel="noopener">Reserve</a>`
+    : `<span class="reserve-status">${statusLabel}</span>`;
+
+  return `
+    <article class="reserve-card${compact ? " compact" : ""}" data-location="${location.slug}" data-region="${location.region}" data-status="${location.status}">
+      <img src="${location.image}" alt="Mott 32 ${location.name}" />
+      <div>
+        <p class="eyebrow">${location.region}</p>
+        <h3>${location.name} <span>${location.han}</span></h3>
+        <p>${location.address}</p>
+        <dl>
+          <div><dt>Status</dt><dd>${statusLabel}</dd></div>
+          <div><dt>Hours</dt><dd>${location.hours}</dd></div>
+        </dl>
+        ${action}
+      </div>
+    </article>
+  `;
+}
+
+function createReserveModal() {
+  if (reserveModal) {
+    return;
+  }
+
+  const locations = getLocations();
+  reserveModal = document.createElement("div");
+  reserveModal.className = "reserve-modal";
+  reserveModal.setAttribute("aria-hidden", "true");
+  reserveModal.setAttribute("role", "dialog");
+  reserveModal.setAttribute("aria-modal", "true");
+  reserveModal.setAttribute("aria-label", "Choose a Mott 32 reservation");
+  reserveModal.innerHTML = `
+    <div class="reserve-modal-panel">
+      <button class="reserve-close" type="button" data-reserve-close aria-label="Close reservations">×</button>
+      <div class="section-heading compact-heading">
+        <span class="crane-mark" aria-hidden="true"></span>
+        <p class="eyebrow">Choose your Mott 32</p>
+        <h2>Reservations</h2>
+      </div>
+      <label class="select-control">
+        <span>Restaurant</span>
+        <select data-reserve-select>
+          ${locations
+            .map((location) => `<option value="${location.slug}">${location.name} - ${getLocationStatusLabel(location)}</option>`)
+            .join("")}
+        </select>
+      </label>
+      <div class="reserve-modal-detail" data-reserve-detail></div>
+      <a class="reserve-full-link" href="/reserve/">View all reservations</a>
+    </div>
+  `;
+
+  document.body.append(reserveModal);
+
+  const select = reserveModal.querySelector("[data-reserve-select]");
+  const detail = reserveModal.querySelector("[data-reserve-detail]");
+  const render = () => {
+    const location = getLocationBySlug(select.value);
+    detail.innerHTML = createReserveCard(location, true);
+  };
+
+  select?.addEventListener("change", render);
+  render();
+
+  reserveModal.querySelector("[data-reserve-close]")?.addEventListener("click", closeReserveModal);
+  reserveModal.addEventListener("click", (event) => {
+    if (event.target === reserveModal) {
+      closeReserveModal();
+    }
+  });
+}
+
+function openReserveModal(event) {
+  event?.preventDefault();
+  createReserveModal();
+  reserveLastActiveElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  setDialogOpen(reserveModal, true, null, "[data-reserve-select]");
+}
+
+function closeReserveModal() {
+  if (!reserveModal) {
+    return;
+  }
+
+  setDialogOpen(reserveModal, false, reserveLastActiveElement);
+  reserveLastActiveElement = null;
+}
+
+function ensureReserveControls() {
+  const isReservePage = document.body.classList.contains("reserve-page");
+
+  if (isReservePage || reserveDelegationReady) {
+    return;
+  }
+
+  reserveDelegationReady = true;
+  document.addEventListener("click", (event) => {
+    const link = event.target.closest('a[href="/reserve/"], a[href="/reserve"]');
+
+    if (!link || link.classList.contains("reserve-full-link")) {
+      return;
+    }
+
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button) {
+      return;
+    }
+
+    openReserveModal(event);
+  });
+}
+
+function renderReservePage() {
+  const grid = document.querySelector(".reserve-grid");
+
+  if (!grid) {
+    return;
+  }
+
+  const locations = getLocations();
+  grid.innerHTML = locations.map((location) => createReserveCard(location)).join("");
+
+  const tools = document.createElement("div");
+  tools.className = "reserve-page-tools";
+  tools.innerHTML = `
+    <label class="select-control">
+      <span>Region</span>
+      <select data-reserve-region>
+        <option value="all">All regions</option>
+        ${Array.from(new Set(locations.map((location) => location.region)))
+          .map((region) => `<option value="${region}">${region}</option>`)
+          .join("")}
+      </select>
+    </label>
+    <label class="select-control">
+      <span>Status</span>
+      <select data-reserve-status>
+        <option value="all">All restaurants</option>
+        <option value="open">Open now</option>
+        <option value="coming-soon">Opening soon</option>
+      </select>
+    </label>
+  `;
+
+  grid.before(tools);
+
+  const update = () => {
+    const region = tools.querySelector("[data-reserve-region]").value;
+    const status = tools.querySelector("[data-reserve-status]").value;
+
+    grid.querySelectorAll(".reserve-card").forEach((card) => {
+      const visible =
+        (region === "all" || card.dataset.region === region) && (status === "all" || card.dataset.status === status);
+      card.hidden = !visible;
+    });
+  };
+
+  tools.addEventListener("change", update);
+  update();
+}
+
+function normaliseLocationName(name) {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-");
+}
+
+function hydrateLocationDirectory() {
+  const locationsPage = document.querySelector(".locations-index");
+
+  if (!locationsPage) {
+    return;
+  }
+
+  const tiles = Array.from(locationsPage.querySelectorAll(".location-tile"));
+
+  tiles.forEach((tile) => {
+    const heading = tile.querySelector("h3")?.childNodes[0]?.textContent?.trim() || "";
+    const slug = normaliseLocationName(heading);
+    const location = getLocationBySlug(slug);
+
+    tile.dataset.location = location.slug;
+    tile.dataset.region = location.region;
+    tile.dataset.status = location.status;
+
+    if (!tile.querySelector(".location-meta")) {
+      tile.insertAdjacentHTML(
+        "beforeend",
+        `<dl class="location-meta">
+          <div><dt>Status</dt><dd>${getLocationStatusLabel(location)}</dd></div>
+          <div><dt>Hours</dt><dd>${location.hours}</dd></div>
+          ${location.phone ? `<div><dt>Phone</dt><dd>${location.phone}</dd></div>` : ""}
+        </dl>`,
+      );
+    }
+
+    if (location.reserve && !tile.querySelector(".location-reserve-link")) {
+      tile.insertAdjacentHTML(
+        "beforeend",
+        `<a class="cut-button location-reserve-link" href="${location.reserve}" target="_blank" rel="noopener">Reserve</a>`,
+      );
+    }
+  });
+
+  const tabs = locationsPage.querySelector(".region-tabs");
+  const tools = document.createElement("div");
+  tools.className = "location-directory-tools";
+  tools.innerHTML = `
+    <label class="search-control">
+      <span>Search location</span>
+      <input type="search" data-location-search placeholder="City, region or venue" autocomplete="off" />
+    </label>
+    <label class="select-control">
+      <span>Status</span>
+      <select data-location-status>
+        <option value="all">All locations</option>
+        <option value="open">Open now</option>
+        <option value="coming-soon">Opening soon</option>
+      </select>
+    </label>
+    <p data-location-summary></p>
+  `;
+  tabs?.after(tools);
+
+  const mapPanel = document.createElement("section");
+  mapPanel.className = "location-map-panel";
+  mapPanel.setAttribute("aria-label", "Location overview");
+  mapPanel.innerHTML = `
+    <div>
+      <p class="eyebrow">Global directory</p>
+      <h2>Find Mott 32 by region</h2>
+    </div>
+    <div class="map-region-list">
+      ${Array.from(new Set(getLocations().map((location) => location.region)))
+        .map((region) => {
+          const count = getLocations().filter((location) => location.region === region).length;
+          return `<button type="button" data-map-region="${region}"><span>${region}</span><strong>${count}</strong></button>`;
+        })
+        .join("")}
+    </div>
+  `;
+  tools.after(mapPanel);
+
+  const search = tools.querySelector("[data-location-search]");
+  const status = tools.querySelector("[data-location-status]");
+  const summary = tools.querySelector("[data-location-summary]");
+
+  const update = () => {
+    const query = search.value.trim().toLowerCase();
+    const statusValue = status.value;
+    let visibleCount = 0;
+
+    tiles.forEach((tile) => {
+      const text = tile.textContent.toLowerCase();
+      const visible = (!query || text.includes(query)) && (statusValue === "all" || tile.dataset.status === statusValue);
+      tile.hidden = !visible;
+      visibleCount += visible ? 1 : 0;
+    });
+
+    locationsPage.querySelectorAll(".region-section").forEach((section) => {
+      section.hidden = !section.querySelector(".location-tile:not([hidden])");
+    });
+
+    summary.textContent = `${visibleCount} ${visibleCount === 1 ? "location" : "locations"} shown`;
+  };
+
+  search.addEventListener("input", update);
+  status.addEventListener("change", update);
+  mapPanel.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-map-region]");
+
+    if (!button) {
+      return;
+    }
+
+    search.value = button.dataset.mapRegion;
+    update();
+    locationsPage.querySelector(".region-section:not([hidden])")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  update();
+}
+
+function upsertMeta(selector, attributes) {
+  let element = document.head.querySelector(selector);
+
+  if (!element) {
+    element = document.createElement("meta");
+    document.head.append(element);
+  }
+
+  Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, value));
+}
+
+function applySeoEnhancements() {
+  const path = getCurrentPath();
+  const pageData = {
+    "/": {
+      title: "Mott 32 | Award-winning Chinese Restaurant",
+      description:
+        "World-class Chinese restaurants with signature cuisine, cocktails, wine, design-led dining rooms and global locations.",
+      image: "/assets/loc-dubai.jpg",
+    },
+    "/our-cuisine/": {
+      title: "Our Cuisine | Mott 32",
+      description:
+        "Authentic Asian cuisine, dim sum, barbecue, seafood and the signature applewood roasted Peking duck.",
+      image: "/assets/cuisine-hero-duck.jpg",
+    },
+    "/our-drinks/": {
+      title: "Our Drinks | Mott 32",
+      description: "Innovative cocktails, sake selection and an award-winning wine list at Mott 32.",
+      image: "/assets/drinks-hero-forbidden.jpg",
+    },
+    "/locations/": {
+      title: "All Locations | Mott 32",
+      description: "Find Mott 32 restaurants, reservation links, opening-soon locations and regional details.",
+      image: "/assets/loc-hk.jpg",
+    },
+    "/reserve/": {
+      title: "Reserve | Mott 32",
+      description: "Choose your Mott 32 restaurant and reserve directly with each location.",
+      image: "/assets/reserve-bg.jpg",
+    },
+  };
+  let selected = pageData[path] || pageData["/"];
+
+  if (locationDetailPage) {
+    const requestedCity = new URLSearchParams(window.location.search).get("city") || "hong-kong";
+    const location = getLocationBySlug(requestedCity);
+    selected = {
+      title: `${location.name} | Mott 32`,
+      description: `${location.intro} ${location.address}. ${getLocationStatusLabel(location)}.`,
+      image: location.image,
+    };
+  }
+  const imageUrl = new URL(selected.image, window.location.origin).href;
+  const canonical = new URL(path, window.location.origin).href;
+
+  document.title = document.title || selected.title;
+  upsertMeta('meta[name="description"]', { name: "description", content: selected.description });
+  upsertMeta('meta[property="og:title"]', { property: "og:title", content: selected.title });
+  upsertMeta('meta[property="og:description"]', { property: "og:description", content: selected.description });
+  upsertMeta('meta[property="og:image"]', { property: "og:image", content: imageUrl });
+  upsertMeta('meta[property="og:url"]', { property: "og:url", content: canonical });
+  upsertMeta('meta[name="twitter:card"]', { name: "twitter:card", content: "summary_large_image" });
+
+  if (!document.head.querySelector('link[rel="canonical"]')) {
+    const link = document.createElement("link");
+    link.rel = "canonical";
+    link.href = canonical;
+    document.head.append(link);
+  }
+
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: selected.title,
+    description: selected.description,
+    url: canonical,
+    primaryImageOfPage: imageUrl,
+    isPartOf: {
+      "@type": "WebSite",
+      name: "Mott 32",
+      url: window.location.origin,
+    },
+  };
+
+  if (path === "/locations/" || path === "/reserve/") {
+    schema.mainEntity = {
+      "@type": "ItemList",
+      itemListElement: getLocations().map((location, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        item: {
+          "@type": "Restaurant",
+          name: `Mott 32 ${location.name}`,
+          image: new URL(location.image, window.location.origin).href,
+          address: location.address,
+          servesCuisine: "Chinese",
+          url: new URL(`/location/?city=${location.slug}`, window.location.origin).href,
+        },
+      })),
+    };
+  }
+
+  if (locationDetailPage) {
+    const requestedCity = new URLSearchParams(window.location.search).get("city") || "hong-kong";
+    const location = getLocationBySlug(requestedCity);
+    schema["@type"] = "Restaurant";
+    schema.name = `Mott 32 ${location.name}`;
+    schema.image = new URL(location.image, window.location.origin).href;
+    schema.address = location.address;
+    schema.telephone = location.phone || undefined;
+    schema.servesCuisine = "Chinese";
+  }
+
+  const script = document.createElement("script");
+  script.type = "application/ld+json";
+  script.textContent = JSON.stringify(schema);
+  document.head.append(script);
 }
 
 function ensureScrollTop() {
@@ -529,7 +1334,9 @@ if (locationDetailPage) {
   });
 
   if (reserveLink) {
-    reserveLink.href = location.reserve;
+    reserveLink.textContent = location.status === "open" && location.reserve ? "Reserve" : getLocationStatusLabel(location);
+    reserveLink.href = location.reserve || "/reserve/";
+    reserveLink.classList.toggle("is-disabled", !location.reserve);
 
     if (location.reserve.startsWith("http")) {
       reserveLink.target = "_blank";
@@ -538,6 +1345,27 @@ if (locationDetailPage) {
       reserveLink.removeAttribute("target");
       reserveLink.removeAttribute("rel");
     }
+  }
+
+  document.querySelectorAll(".location-menu-links a").forEach((link) => {
+    const url = new URL(link.href, window.location.origin);
+    if (url.pathname === "/our-cuisine/" || url.pathname === "/our-drinks/") {
+      url.searchParams.set("city", location.slug);
+      link.href = `${url.pathname}?${url.searchParams.toString()}`;
+    }
+  });
+
+  const detailCopy = document.querySelector(".location-detail-block .signature-copy");
+  if (detailCopy && !detailCopy.querySelector(".location-facts")) {
+    detailCopy.insertAdjacentHTML(
+      "beforeend",
+      `<dl class="location-facts">
+        <div><dt>Status</dt><dd>${getLocationStatusLabel(location)}</dd></div>
+        <div><dt>Hours</dt><dd>${location.hours}</dd></div>
+        ${location.phone ? `<div><dt>Phone</dt><dd>${location.phone}</dd></div>` : ""}
+        <div><dt>Contact</dt><dd><a href="mailto:${location.email}">${location.email}</a></dd></div>
+      </dl>`,
+    );
   }
 }
 
@@ -607,6 +1435,46 @@ function restartHero() {
   heroTimer = setInterval(() => setPanel(activePanel + 1), 5000);
 }
 
+function stopHero() {
+  clearInterval(heroTimer);
+}
+
+function attachHeroInteractions() {
+  const hero = panels[0]?.closest(".hero");
+
+  if (!hero || panels.length < 2) {
+    return;
+  }
+
+  let pointerStart = null;
+
+  hero.addEventListener("pointerdown", (event) => {
+    pointerStart = { x: event.clientX, y: event.clientY };
+  });
+
+  hero.addEventListener("pointerup", (event) => {
+    if (!pointerStart) {
+      return;
+    }
+
+    const deltaX = event.clientX - pointerStart.x;
+    const deltaY = event.clientY - pointerStart.y;
+    pointerStart = null;
+
+    if (Math.abs(deltaX) < 42 || Math.abs(deltaY) > 60) {
+      return;
+    }
+
+    setPanel(deltaX < 0 ? activePanel + 1 : activePanel - 1);
+    restartHero();
+  });
+
+  hero.addEventListener("mouseenter", stopHero);
+  hero.addEventListener("mouseleave", restartHero);
+  hero.addEventListener("focusin", stopHero);
+  hero.addEventListener("focusout", restartHero);
+}
+
 dots.forEach((dot, index) => {
   dot.addEventListener("click", () => {
     setPanel(index);
@@ -629,21 +1497,43 @@ function setDrawer(open) {
     return;
   }
 
+  if (open) {
+    drawerLastActiveElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  }
+
   drawer.classList.toggle("is-open", open);
   drawer.setAttribute("aria-hidden", String(!open));
   navToggle.setAttribute("aria-expanded", String(open));
   updateBodyLock();
+
+  if (open) {
+    const focusTarget = drawer.querySelector("[aria-current='page']") || drawer.querySelector("a");
+    focusTarget?.focus();
+  } else if (drawerLastActiveElement) {
+    drawerLastActiveElement.focus();
+    drawerLastActiveElement = null;
+  }
 }
 
 hydrateGlobalNavigation();
+applySeoEnhancements();
 createHeroLabels();
+attachHeroInteractions();
 ensureCookieControls();
 ensureVipControls();
+ensureReserveControls();
+renderReservePage();
+hydrateLocationDirectory();
 ensureScrollTop();
 
 navToggle?.addEventListener("click", () => setDrawer(true));
 drawerClose?.addEventListener("click", () => setDrawer(false));
 drawer?.querySelectorAll("a").forEach((link) => link.addEventListener("click", () => setDrawer(false)));
+drawer?.addEventListener("click", (event) => {
+  if (event.target === drawer) {
+    setDrawer(false);
+  }
+});
 
 document.addEventListener("submit", (event) => {
   if (!event.target.matches(".signup-form")) {
@@ -676,6 +1566,80 @@ document.querySelectorAll("[data-rail-section]").forEach((section) => {
 
   previousRail?.addEventListener("click", () => scrollByPage(-1));
   nextRail?.addEventListener("click", () => scrollByPage(1));
+
+  rail.tabIndex = 0;
+  rail.setAttribute("role", rail.getAttribute("role") || "region");
+  rail.setAttribute("aria-label", section.getAttribute("aria-label") || "Carousel");
+
+  let startX = 0;
+  let startScroll = 0;
+  let dragging = false;
+  let railTimer = 0;
+
+  const stopRail = () => window.clearInterval(railTimer);
+  const startRail = () => {
+    stopRail();
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+
+    railTimer = window.setInterval(() => {
+      const atEnd = Math.ceil(rail.scrollLeft + rail.clientWidth) >= rail.scrollWidth - 4;
+      rail.scrollTo({
+        left: atEnd ? 0 : rail.scrollLeft + Math.min(rail.clientWidth * 0.72, 460),
+        behavior: "smooth",
+      });
+    }, 5200);
+  };
+
+  rail.addEventListener("pointerdown", (event) => {
+    dragging = true;
+    startX = event.clientX;
+    startScroll = rail.scrollLeft;
+    rail.classList.add("is-dragging");
+    rail.setPointerCapture?.(event.pointerId);
+    stopRail();
+  });
+
+  rail.addEventListener("pointermove", (event) => {
+    if (!dragging) {
+      return;
+    }
+
+    rail.scrollLeft = startScroll - (event.clientX - startX);
+  });
+
+  rail.addEventListener("pointerup", (event) => {
+    dragging = false;
+    rail.classList.remove("is-dragging");
+    rail.releasePointerCapture?.(event.pointerId);
+    startRail();
+  });
+
+  rail.addEventListener("pointercancel", () => {
+    dragging = false;
+    rail.classList.remove("is-dragging");
+    startRail();
+  });
+
+  rail.addEventListener("keydown", (event) => {
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      scrollByPage(-1);
+    }
+
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      scrollByPage(1);
+    }
+  });
+
+  section.addEventListener("mouseenter", stopRail);
+  section.addEventListener("mouseleave", startRail);
+  section.addEventListener("focusin", stopRail);
+  section.addEventListener("focusout", startRail);
+  startRail();
 });
 
 document.querySelectorAll("[data-scroll-target]").forEach((button) => {
@@ -778,10 +1742,13 @@ function ensureScrollReveal() {
         ".vip-signup figure",
         ".signature-block",
         ".menu-card",
+        ".menu-location-controls",
         ".sample-panel",
         ".private-dining > *",
         ".wine-panel > div",
         ".reservation-panel > div",
+        ".reserve-card",
+        ".location-map-panel",
         ".founder-card",
         ".principle-grid article",
         ".career-panel",
@@ -833,25 +1800,119 @@ ensureScrollReveal();
 document.querySelectorAll("[data-menu-browser]").forEach((browser) => {
   const filters = Array.from(browser.querySelectorAll("[data-filter]"));
   const cards = Array.from(browser.querySelectorAll(".menu-card"));
+  const isDrinkPage = document.body.classList.contains("drinks-page");
+  const requestedCity = new URLSearchParams(window.location.search).get("city");
+  let activeLocation = requestedCity && locationDetails[requestedCity]?.status === "open" ? requestedCity : "all";
+
+  function getCardTitle(card) {
+    return card.querySelector("[data-lightbox-title]")?.dataset.lightboxTitle || card.querySelector("strong")?.textContent?.trim() || "";
+  }
+
+  function getCardLocations(card) {
+    const title = getCardTitle(card);
+    const explicit = card.dataset.locations?.split(/\s+/).filter(Boolean);
+
+    if (explicit?.length) {
+      return explicit;
+    }
+
+    return menuAvailability[title] || getReservableLocations().map((location) => location.slug);
+  }
+
+  function createMenuLocationControls() {
+    if (browser.querySelector(".menu-location-controls")) {
+      return;
+    }
+
+    const heading = browser.querySelector(".section-heading");
+    const controls = document.createElement("div");
+    controls.className = "menu-location-controls";
+    controls.innerHTML = `
+      <label class="select-control">
+        <span>Location</span>
+        <select data-menu-location>
+          <option value="all">All open locations</option>
+          ${getReservableLocations()
+            .map((location) => `<option value="${location.slug}">${location.name}</option>`)
+            .join("")}
+        </select>
+      </label>
+      <p data-menu-location-note>Showing signature items across open locations.</p>
+      <div class="menu-pdf-links" data-menu-links></div>
+    `;
+
+    heading?.insertAdjacentElement("afterend", controls);
+    controls.querySelector("[data-menu-location]").value = activeLocation;
+  }
+
+  function updateMenuLocationNote() {
+    const controls = browser.querySelector(".menu-location-controls");
+    const note = controls?.querySelector("[data-menu-location-note]");
+    const links = controls?.querySelector("[data-menu-links]");
+    const selected = activeLocation === "all" ? null : getLocationBySlug(activeLocation);
+
+    if (note) {
+      note.textContent = selected
+        ? `${selected.name}: ${selected.menuNote}`
+        : "Showing signature items across open locations.";
+    }
+
+    if (links) {
+      const winePdf = selected?.drinksPdf || locationDetails["hong-kong"].drinksPdf;
+      links.innerHTML = isDrinkPage
+        ? `<a class="cut-button small-button" href="${winePdf}" target="_blank" rel="noopener">Wine List</a>`
+        : `<a class="cut-button small-button" href="/reserve/">Reserve selected location</a>`;
+    }
+  }
+
+  function updateMenuCards() {
+    const activeFilter = filters.find((button) => button.classList.contains("is-active"))?.dataset.filter || "all";
+    let visibleCount = 0;
+
+    cards.forEach((card) => {
+      const categories = (card.dataset.category || "").split(/\s+/);
+      const locations = getCardLocations(card);
+      const matchesFilter = activeFilter === "all" || categories.includes(activeFilter);
+      const matchesLocation = activeLocation === "all" || locations.includes(activeLocation);
+
+      card.dataset.locations = locations.join(" ");
+      card.hidden = !(matchesFilter && matchesLocation);
+      visibleCount += card.hidden ? 0 : 1;
+    });
+
+    let empty = browser.querySelector(".menu-empty-state");
+    if (!empty) {
+      empty = document.createElement("p");
+      empty.className = "menu-empty-state";
+      empty.textContent = "No matching items are listed for this location yet.";
+      browser.querySelector(".menu-grid")?.after(empty);
+    }
+
+    empty.hidden = visibleCount > 0;
+    updateMenuLocationNote();
+  }
+
+  createMenuLocationControls();
 
   filters.forEach((filterButton) => {
     filterButton.setAttribute("aria-selected", filterButton.classList.contains("is-active") ? "true" : "false");
 
     filterButton.addEventListener("click", () => {
-      const filter = filterButton.dataset.filter;
-
       filters.forEach((button) => {
         const active = button === filterButton;
         button.classList.toggle("is-active", active);
         button.setAttribute("aria-selected", String(active));
       });
-
-      cards.forEach((card) => {
-        const categories = (card.dataset.category || "").split(/\s+/);
-        card.hidden = filter !== "all" && !categories.includes(filter);
-      });
+      updateMenuCards();
     });
   });
+
+  browser.querySelector("[data-menu-location]")?.addEventListener("change", (event) => {
+    activeLocation = event.target.value;
+    updateMenuCards();
+  });
+
+  updateMenuCards();
 });
 
 document.querySelectorAll("[data-accordion]").forEach((accordion) => {
@@ -893,13 +1954,22 @@ function setLightbox(open) {
   lightbox.setAttribute("aria-hidden", String(!open));
   updateBodyLock();
 
-  if (!open && lastActiveElement) {
-    lastActiveElement.focus();
-    lastActiveElement = null;
+  if (!open) {
+    activeLightboxZoomed = false;
+    lightbox.classList.remove("is-zoomed");
+
+    if (lastActiveElement) {
+      lastActiveElement.focus();
+      lastActiveElement = null;
+    }
   }
 }
 
 const lightboxTriggers = Array.from(document.querySelectorAll("[data-lightbox-trigger]"));
+
+function getActiveLightboxTriggers() {
+  return lightboxTriggers.filter((trigger) => !trigger.closest("[hidden]"));
+}
 
 function renderLightbox(trigger) {
   if (!lightbox || !trigger) {
@@ -910,22 +1980,66 @@ function renderLightbox(trigger) {
   const title = lightbox.querySelector("[data-lightbox-title]");
   const copy = lightbox.querySelector("[data-lightbox-copy]");
   const kicker = lightbox.querySelector("[data-lightbox-kicker]");
+  const counter = lightbox.querySelector("[data-lightbox-counter]");
   const label = trigger.querySelector("span")?.textContent?.trim() || "Menu";
+  const activeTriggers = getActiveLightboxTriggers();
+  const activeIndex = activeTriggers.indexOf(trigger);
 
   image.src = trigger.dataset.lightboxImage;
   image.alt = trigger.dataset.lightboxTitle || "";
   title.textContent = trigger.dataset.lightboxTitle || "";
   copy.textContent = trigger.dataset.lightboxCopy || "";
   kicker.textContent = label;
+
+  if (counter) {
+    counter.textContent = activeIndex >= 0 ? `${activeIndex + 1} / ${activeTriggers.length}` : "";
+  }
+
+  lightbox.querySelectorAll("[data-lightbox-thumb]").forEach((button) => {
+    const active = Number(button.dataset.lightboxThumb) === activeIndex;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-current", active ? "true" : "false");
+  });
 }
 
 function showLightboxAt(index) {
-  if (!lightboxTriggers.length) {
+  const activeTriggers = getActiveLightboxTriggers();
+
+  if (!activeTriggers.length) {
     return;
   }
 
-  activeLightboxIndex = (index + lightboxTriggers.length) % lightboxTriggers.length;
-  renderLightbox(lightboxTriggers[activeLightboxIndex]);
+  activeLightboxIndex = (index + activeTriggers.length) % activeTriggers.length;
+  activeLightboxZoomed = false;
+  lightbox?.classList.remove("is-zoomed");
+  renderLightbox(activeTriggers[activeLightboxIndex]);
+}
+
+function renderLightboxThumbs() {
+  if (!lightbox) {
+    return;
+  }
+
+  const activeTriggers = getActiveLightboxTriggers();
+  const thumbs = lightbox.querySelector("[data-lightbox-thumbs]");
+
+  if (!thumbs) {
+    return;
+  }
+
+  thumbs.innerHTML = activeTriggers
+    .map(
+      (trigger, index) => `
+        <button type="button" data-lightbox-thumb="${index}" aria-label="Show ${trigger.dataset.lightboxTitle || `item ${index + 1}`}">
+          <img src="${trigger.dataset.lightboxImage}" alt="" />
+        </button>
+      `,
+    )
+    .join("");
+
+  thumbs.querySelectorAll("[data-lightbox-thumb]").forEach((button) => {
+    button.addEventListener("click", () => showLightboxAt(Number(button.dataset.lightboxThumb)));
+  });
 }
 
 function ensureLightboxControls() {
@@ -938,11 +2052,25 @@ function ensureLightboxControls() {
   controls.innerHTML = `
     <button type="button" data-lightbox-prev aria-label="Previous item">Previous</button>
     <button type="button" data-lightbox-next aria-label="Next item">Next</button>
+    <button type="button" data-lightbox-zoom aria-label="Toggle image zoom">Zoom</button>
   `;
+  const counter = document.createElement("p");
+  counter.className = "lightbox-counter";
+  counter.setAttribute("data-lightbox-counter", "");
+  const thumbs = document.createElement("div");
+  thumbs.className = "lightbox-thumbs";
+  thumbs.setAttribute("data-lightbox-thumbs", "");
+
+  lightbox.querySelector(".lightbox-panel")?.append(counter);
   lightbox.querySelector(".lightbox-panel")?.append(controls);
+  lightbox.querySelector(".lightbox-panel")?.append(thumbs);
 
   controls.querySelector("[data-lightbox-prev]")?.addEventListener("click", () => showLightboxAt(activeLightboxIndex - 1));
   controls.querySelector("[data-lightbox-next]")?.addEventListener("click", () => showLightboxAt(activeLightboxIndex + 1));
+  controls.querySelector("[data-lightbox-zoom]")?.addEventListener("click", () => {
+    activeLightboxZoomed = !activeLightboxZoomed;
+    lightbox.classList.toggle("is-zoomed", activeLightboxZoomed);
+  });
 }
 
 ensureLightboxControls();
@@ -954,7 +2082,10 @@ lightboxTriggers.forEach((trigger, index) => {
     }
 
     lastActiveElement = trigger;
-    activeLightboxIndex = index;
+    renderLightboxThumbs();
+    activeLightboxIndex = getActiveLightboxTriggers().indexOf(trigger);
+    activeLightboxZoomed = false;
+    lightbox.classList.remove("is-zoomed");
     renderLightbox(trigger);
     setLightbox(true);
     lightbox.querySelector("[data-lightbox-close]")?.focus();
@@ -969,6 +2100,18 @@ lightbox?.addEventListener("click", (event) => {
 });
 
 document.addEventListener("keydown", (event) => {
+  if (reserveModal?.classList.contains("is-open")) {
+    trapFocus(event, reserveModal);
+  } else if (vipModal?.classList.contains("is-open")) {
+    trapFocus(event, vipModal);
+  } else if (cookieModal?.classList.contains("is-open")) {
+    trapFocus(event, cookieModal);
+  } else if (lightbox?.classList.contains("is-open")) {
+    trapFocus(event, lightbox);
+  } else if (drawer?.classList.contains("is-open")) {
+    trapFocus(event, drawer);
+  }
+
   if (lightbox?.classList.contains("is-open") && event.key === "ArrowLeft") {
     showLightboxAt(activeLightboxIndex - 1);
     return;
@@ -980,6 +2123,11 @@ document.addEventListener("keydown", (event) => {
   }
 
   if (event.key !== "Escape") {
+    return;
+  }
+
+  if (reserveModal?.classList.contains("is-open")) {
+    closeReserveModal();
     return;
   }
 
