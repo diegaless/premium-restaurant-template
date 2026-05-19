@@ -12,6 +12,7 @@ const locationDetailPage = document.querySelector("[data-location-detail-page]")
 const cookieStorageKey = "mott32CookieChoice";
 const vipStorageKey = "mott32VipSeen";
 const vipStateStorageKey = "mott32VipState";
+const locationStorageKey = "mott32PreferredLocation";
 let cookieModal = null;
 let vipModal = null;
 let reserveModal = null;
@@ -437,6 +438,28 @@ function hydrateGlobalNavigation() {
   });
 }
 
+function ensureSkipLink() {
+  if (document.querySelector(".skip-link")) {
+    return;
+  }
+
+  const main = document.querySelector("#page-content") || document.querySelector("main");
+
+  if (!main) {
+    return;
+  }
+
+  if (!main.id) {
+    main.id = "page-content";
+  }
+
+  const link = document.createElement("a");
+  link.className = "skip-link";
+  link.href = `#${main.id}`;
+  link.textContent = "Skip to main content";
+  document.body.prepend(link);
+}
+
 function getCookieChoice() {
   try {
     return JSON.parse(window.localStorage.getItem(cookieStorageKey) || "null");
@@ -470,6 +493,58 @@ function getLocations(options = {}) {
 
 function getLocationBySlug(slug) {
   return locationDetails[slug] || locationDetails["hong-kong"];
+}
+
+function isKnownLocation(slug, options = {}) {
+  const { openOnly = false, allowAll = false } = options;
+
+  if (allowAll && slug === "all") {
+    return true;
+  }
+
+  const location = locationDetails[slug];
+  return Boolean(location && (!openOnly || location.status === "open"));
+}
+
+function getStoredLocationSlug() {
+  try {
+    return window.localStorage.getItem(locationStorageKey) || "";
+  } catch {
+    return "";
+  }
+}
+
+function savePreferredLocation(slug) {
+  if (!isKnownLocation(slug, { allowAll: true })) {
+    return;
+  }
+
+  try {
+    if (slug === "all") {
+      window.localStorage.removeItem(locationStorageKey);
+    } else {
+      window.localStorage.setItem(locationStorageKey, slug);
+    }
+  } catch {
+    return;
+  }
+}
+
+function getPreferredLocationSlug(options = {}) {
+  const { allowAll = true, openOnly = true, fallback = "all" } = options;
+  const params = new URLSearchParams(window.location.search);
+  const city = params.get("city");
+  const stored = getStoredLocationSlug();
+
+  if (isKnownLocation(city, { allowAll, openOnly })) {
+    return city;
+  }
+
+  if (isKnownLocation(stored, { allowAll, openOnly })) {
+    return stored;
+  }
+
+  return allowAll ? fallback : fallback === "all" ? "hong-kong" : fallback;
 }
 
 function getReservableLocations() {
@@ -536,6 +611,25 @@ function setDialogOpen(dialog, open, trigger, focusSelector) {
   }
 
   trigger?.focus?.();
+}
+
+function updateUrlParams(updates, options = {}) {
+  const { replace = true } = options;
+  const url = new URL(window.location.href);
+
+  Object.entries(updates).forEach(([key, value]) => {
+    if (!value || value === "all") {
+      url.searchParams.delete(key);
+    } else {
+      url.searchParams.set(key, value);
+    }
+  });
+
+  const next = `${url.pathname}${url.search}${url.hash}`;
+
+  if (next !== `${window.location.pathname}${window.location.search}${window.location.hash}`) {
+    window.history[replace ? "replaceState" : "pushState"]({}, "", next);
+  }
 }
 
 function updateBodyLock() {
@@ -946,8 +1040,15 @@ function createReserveModal() {
   const detail = reserveModal.querySelector("[data-reserve-detail]");
   const render = () => {
     const location = getLocationBySlug(select.value);
+    savePreferredLocation(location.slug);
     detail.innerHTML = createReserveCard(location, true);
+    reserveModal.querySelector(".reserve-full-link").href = `/reserve/?city=${location.slug}`;
   };
+
+  const preferred = getPreferredLocationSlug({ allowAll: false, openOnly: false, fallback: "hong-kong" });
+  if (select && isKnownLocation(preferred, { openOnly: false })) {
+    select.value = preferred;
+  }
 
   select?.addEventListener("change", render);
   render();
@@ -1013,6 +1114,13 @@ function renderReservePage() {
   tools.className = "reserve-page-tools";
   tools.innerHTML = `
     <label class="select-control">
+      <span>Restaurant</span>
+      <select data-reserve-city>
+        <option value="all">All restaurants</option>
+        ${locations.map((location) => `<option value="${location.slug}">${location.name}</option>`).join("")}
+      </select>
+    </label>
+    <label class="select-control">
       <span>Region</span>
       <select data-reserve-region>
         <option value="all">All regions</option>
@@ -1033,18 +1141,51 @@ function renderReservePage() {
 
   grid.before(tools);
 
+  const params = new URLSearchParams(window.location.search);
+  const cityControl = tools.querySelector("[data-reserve-city]");
+  const regionControl = tools.querySelector("[data-reserve-region]");
+  const statusControl = tools.querySelector("[data-reserve-status]");
+  const requestedCity = params.get("city");
+  const requestedRegion = params.get("region");
+  const requestedStatus = params.get("status");
+
+  if (isKnownLocation(requestedCity, { allowAll: true, openOnly: false })) {
+    cityControl.value = requestedCity;
+  }
+
+  if (requestedRegion && Array.from(regionControl.options).some((option) => option.value === requestedRegion)) {
+    regionControl.value = requestedRegion;
+  }
+
+  if (requestedStatus && Array.from(statusControl.options).some((option) => option.value === requestedStatus)) {
+    statusControl.value = requestedStatus;
+  }
+
   const update = () => {
-    const region = tools.querySelector("[data-reserve-region]").value;
-    const status = tools.querySelector("[data-reserve-status]").value;
+    const city = cityControl.value;
+    const region = regionControl.value;
+    const status = statusControl.value;
 
     grid.querySelectorAll(".reserve-card").forEach((card) => {
       const visible =
-        (region === "all" || card.dataset.region === region) && (status === "all" || card.dataset.status === status);
+        (city === "all" || card.dataset.location === city) &&
+        (region === "all" || card.dataset.region === region) &&
+        (status === "all" || card.dataset.status === status);
       card.hidden = !visible;
+      card.classList.toggle("is-highlighted", city !== "all" && card.dataset.location === city);
     });
+
+    if (city !== "all") {
+      savePreferredLocation(city);
+    }
+
+    updateUrlParams({ city, region, status });
   };
 
-  tools.addEventListener("change", update);
+  tools.addEventListener("change", () => {
+    update();
+    grid.querySelector(".reserve-card:not([hidden])")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
   update();
 }
 
@@ -1135,6 +1276,13 @@ function hydrateLocationDirectory() {
   const search = tools.querySelector("[data-location-search]");
   const status = tools.querySelector("[data-location-status]");
   const summary = tools.querySelector("[data-location-summary]");
+  const params = new URLSearchParams(window.location.search);
+
+  search.value = params.get("q") || "";
+
+  if (params.get("status") && Array.from(status.options).some((option) => option.value === params.get("status"))) {
+    status.value = params.get("status");
+  }
 
   const update = () => {
     const query = search.value.trim().toLowerCase();
@@ -1142,7 +1290,7 @@ function hydrateLocationDirectory() {
     let visibleCount = 0;
 
     tiles.forEach((tile) => {
-      const text = tile.textContent.toLowerCase();
+      const text = `${tile.textContent} ${tile.dataset.region} ${tile.dataset.status}`.toLowerCase();
       const visible = (!query || text.includes(query)) && (statusValue === "all" || tile.dataset.status === statusValue);
       tile.hidden = !visible;
       visibleCount += visible ? 1 : 0;
@@ -1153,6 +1301,7 @@ function hydrateLocationDirectory() {
     });
 
     summary.textContent = `${visibleCount} ${visibleCount === 1 ? "location" : "locations"} shown`;
+    updateUrlParams({ q: search.value.trim(), status: statusValue });
   };
 
   search.addEventListener("input", update);
@@ -1225,7 +1374,14 @@ function applySeoEnhancements() {
     };
   }
   const imageUrl = new URL(selected.image, window.location.origin).href;
-  const canonical = new URL(path, window.location.origin).href;
+  const canonicalUrl = new URL(path, window.location.origin);
+
+  if (locationDetailPage) {
+    const requestedCity = new URLSearchParams(window.location.search).get("city") || "hong-kong";
+    canonicalUrl.searchParams.set("city", getLocationBySlug(requestedCity).slug);
+  }
+
+  const canonical = canonicalUrl.href;
 
   document.title = document.title || selected.title;
   upsertMeta('meta[name="description"]', { name: "description", content: selected.description });
@@ -1316,6 +1472,8 @@ if (locationDetailPage) {
   const detailImage = document.querySelector("[data-location-image]");
   const reserveLink = document.querySelector("[data-location-reserve]");
 
+  savePreferredLocation(location.slug);
+
   document.title = `${location.name} | Mott 32`;
   document.querySelector("[data-location-name]").textContent = location.name;
   document.querySelector("[data-location-han]").textContent = location.han;
@@ -1335,8 +1493,13 @@ if (locationDetailPage) {
 
   if (reserveLink) {
     reserveLink.textContent = location.status === "open" && location.reserve ? "Reserve" : getLocationStatusLabel(location);
-    reserveLink.href = location.reserve || "/reserve/";
+    if (location.reserve) {
+      reserveLink.href = location.reserve;
+    } else {
+      reserveLink.removeAttribute("href");
+    }
     reserveLink.classList.toggle("is-disabled", !location.reserve);
+    reserveLink.setAttribute("aria-disabled", String(!location.reserve));
 
     if (location.reserve.startsWith("http")) {
       reserveLink.target = "_blank";
@@ -1516,6 +1679,7 @@ function setDrawer(open) {
 }
 
 hydrateGlobalNavigation();
+ensureSkipLink();
 applySeoEnhancements();
 createHeroLabels();
 attachHeroInteractions();
@@ -1801,8 +1965,9 @@ document.querySelectorAll("[data-menu-browser]").forEach((browser) => {
   const filters = Array.from(browser.querySelectorAll("[data-filter]"));
   const cards = Array.from(browser.querySelectorAll(".menu-card"));
   const isDrinkPage = document.body.classList.contains("drinks-page");
-  const requestedCity = new URLSearchParams(window.location.search).get("city");
-  let activeLocation = requestedCity && locationDetails[requestedCity]?.status === "open" ? requestedCity : "all";
+  const params = new URLSearchParams(window.location.search);
+  const requestedFilter = params.get("filter");
+  let activeLocation = getPreferredLocationSlug({ allowAll: true, openOnly: true, fallback: "all" });
 
   function getCardTitle(card) {
     return card.querySelector("[data-lightbox-title]")?.dataset.lightboxTitle || card.querySelector("strong")?.textContent?.trim() || "";
@@ -1865,6 +2030,24 @@ document.querySelectorAll("[data-menu-browser]").forEach((browser) => {
     }
   }
 
+  function renderAvailabilityBadge(card, locations) {
+    let badge = card.querySelector(".menu-availability");
+    const selected = activeLocation === "all" ? null : getLocationBySlug(activeLocation);
+    const text = selected
+      ? locations.includes(activeLocation)
+        ? `Available in ${selected.name}`
+        : `Not listed in ${selected.name}`
+      : `${locations.length} locations`;
+
+    if (!badge) {
+      badge = document.createElement("small");
+      badge.className = "menu-availability";
+      card.querySelector(".menu-card-trigger")?.append(badge);
+    }
+
+    badge.textContent = text;
+  }
+
   function updateMenuCards() {
     const activeFilter = filters.find((button) => button.classList.contains("is-active"))?.dataset.filter || "all";
     let visibleCount = 0;
@@ -1876,6 +2059,7 @@ document.querySelectorAll("[data-menu-browser]").forEach((browser) => {
       const matchesLocation = activeLocation === "all" || locations.includes(activeLocation);
 
       card.dataset.locations = locations.join(" ");
+      renderAvailabilityBadge(card, locations);
       card.hidden = !(matchesFilter && matchesLocation);
       visibleCount += card.hidden ? 0 : 1;
     });
@@ -1890,9 +2074,18 @@ document.querySelectorAll("[data-menu-browser]").forEach((browser) => {
 
     empty.hidden = visibleCount > 0;
     updateMenuLocationNote();
+    updateUrlParams({ city: activeLocation, filter: activeFilter });
   }
 
   createMenuLocationControls();
+
+  if (requestedFilter && filters.some((button) => button.dataset.filter === requestedFilter)) {
+    filters.forEach((button) => {
+      const active = button.dataset.filter === requestedFilter;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-selected", String(active));
+    });
+  }
 
   filters.forEach((filterButton) => {
     filterButton.setAttribute("aria-selected", filterButton.classList.contains("is-active") ? "true" : "false");
@@ -1909,6 +2102,7 @@ document.querySelectorAll("[data-menu-browser]").forEach((browser) => {
 
   browser.querySelector("[data-menu-location]")?.addEventListener("change", (event) => {
     activeLocation = event.target.value;
+    savePreferredLocation(activeLocation);
     updateMenuCards();
   });
 
