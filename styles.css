@@ -443,8 +443,10 @@ em {
 
 .location-carousel {
   --location-card-width: clamp(292px, 18.6vw, 357px);
-  --location-featured-width: clamp(344px, 21.9vw, 420px);
-  --location-gap: clamp(58px, 5.8vw, 112px);
+  --location-featured-width: clamp(330px, 21.9vw, 420px);
+  --location-card-scale: 0.865;
+  --location-gap: clamp(45px, 4vw, 76px);
+  --location-ease: cubic-bezier(0.19, 1, 0.22, 1);
 
   display: grid;
   grid-auto-flow: column;
@@ -456,8 +458,13 @@ em {
   min-height: clamp(650px, 68vh, 740px);
   padding: 0 max(0px, calc((100vw - 1616px) / 2)) 70px;
   scroll-padding-inline: calc((100vw - var(--location-featured-width)) / 2);
+  scroll-snap-stop: always;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
+}
+
+.location-carousel.is-programmatic {
+  scroll-snap-type: none;
 }
 
 .location-carousel::-webkit-scrollbar {
@@ -466,14 +473,17 @@ em {
 
 .location-card {
   display: block;
-  width: var(--location-card-width);
+  width: var(--location-featured-width);
   justify-self: center;
   scroll-snap-align: center;
   text-align: center;
+  transform: translateZ(0) scale(var(--location-card-scale));
+  transform-origin: center bottom;
   transition:
-    width 420ms ease,
-    filter 420ms ease,
-    opacity 420ms ease;
+    transform 820ms var(--location-ease),
+    filter 820ms var(--location-ease),
+    opacity 620ms ease;
+  will-change: transform, opacity;
 }
 
 .location-card img {
@@ -481,16 +491,16 @@ em {
   aspect-ratio: 1278 / 1917;
   object-fit: cover;
   filter: brightness(0.82) contrast(1.04);
-  transition: filter 420ms ease;
+  transition: filter 820ms var(--location-ease);
 }
 
 .location-card:not(.is-featured) {
-  opacity: 0.92;
+  opacity: 0.88;
 }
 
 .location-card.is-featured {
-  width: var(--location-featured-width);
   opacity: 1;
+  transform: translateZ(0) scale(1);
 }
 
 .location-card.is-featured img {
@@ -562,11 +572,16 @@ em {
   border: 1px solid var(--gold);
   background: transparent;
   transform: rotate(45deg);
+  transition:
+    background 320ms ease,
+    opacity 320ms ease,
+    transform 420ms cubic-bezier(0.19, 1, 0.22, 1);
   cursor: pointer;
 }
 
 .location-dots button.is-active {
   background: var(--gold-light);
+  transform: rotate(45deg) scale(1.22);
 }
 
 .cut-button {
@@ -2893,6 +2908,7 @@ body.modal-open {
   .location-carousel {
     --location-card-width: clamp(220px, 58vw, 300px);
     --location-featured-width: clamp(260px, 66vw, 326px);
+    --location-card-scale: 0.92;
     --location-gap: 30px;
 
     min-height: 540px;
@@ -3376,6 +3392,7 @@ body.modal-open {
   .location-carousel {
     --location-card-width: clamp(160px, 28svh, 220px);
     --location-featured-width: clamp(176px, 31svh, 260px);
+    --location-card-scale: 0.85;
 
     min-height: 430px;
     padding-bottom: 72px;
@@ -3472,6 +3489,7 @@ body.modal-open {
   .location-carousel {
     --location-card-width: clamp(132px, 24svh, 160px);
     --location-featured-width: clamp(148px, 27svh, 176px);
+    --location-card-scale: 0.9;
 
     min-height: 360px;
   }

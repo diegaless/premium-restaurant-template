@@ -1717,15 +1717,56 @@ if (locationRail) {
     0,
     locationCards.findIndex((card) => card.classList.contains("is-featured")),
   );
-  let locationScrollFrame = 0;
+  let locationScrollAnimation = 0;
+  let locationScrollIdleTimer = 0;
+
+  const locationScrollEase = (progress) => 1 - Math.pow(1 - progress, 2);
+
+  const scrollLocationRailTo = (left, behavior = "smooth") => {
+    const targetLeft = Math.max(0, Math.min(left, locationRail.scrollWidth - locationRail.clientWidth));
+
+    window.cancelAnimationFrame(locationScrollAnimation);
+
+    if (behavior === "auto" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      locationRail.classList.remove("is-programmatic");
+      locationRail.scrollLeft = targetLeft;
+      locationScrollAnimation = 0;
+      return;
+    }
+
+    const startLeft = locationRail.scrollLeft;
+    const distance = targetLeft - startLeft;
+    const duration = Math.min(1180, Math.max(820, Math.abs(distance) * 0.46));
+    let startTime = 0;
+    locationRail.classList.add("is-programmatic");
+
+    const animate = (time) => {
+      if (!startTime) {
+        startTime = time;
+      }
+
+      const progress = Math.min(1, (time - startTime) / duration);
+      locationRail.scrollLeft = startLeft + distance * locationScrollEase(progress);
+
+      if (progress < 1) {
+        locationScrollAnimation = window.requestAnimationFrame(animate);
+      } else {
+        locationRail.scrollLeft = targetLeft;
+        locationRail.classList.remove("is-programmatic");
+        locationScrollAnimation = 0;
+      }
+    };
+
+    locationScrollAnimation = window.requestAnimationFrame(animate);
+  };
 
   const centerLocationCard = (card, behavior = "smooth") => {
     if (!card) {
       return;
     }
 
-    const left = card.offsetLeft - (locationRail.clientWidth - card.offsetWidth) / 2;
-    locationRail.scrollTo({ left: Math.max(0, left), behavior });
+    const left = card.offsetLeft + card.offsetWidth / 2 - locationRail.clientWidth / 2;
+    scrollLocationRailTo(left, behavior);
   };
 
   const setActiveLocationCard = (index, options = {}) => {
@@ -1758,7 +1799,6 @@ if (locationRail) {
   };
 
   const updateActiveLocationFromScroll = () => {
-    locationScrollFrame = 0;
     const viewportCenter = locationRail.scrollLeft + locationRail.clientWidth / 2;
     const nearestIndex = locationCards.reduce((nearest, card, cardIndex) => {
       const cardCenter = card.offsetLeft + card.offsetWidth / 2;
@@ -1789,8 +1829,12 @@ if (locationRail) {
   locationRail.addEventListener(
     "scroll",
     () => {
-      if (!locationScrollFrame) {
-        locationScrollFrame = window.requestAnimationFrame(updateActiveLocationFromScroll);
+      window.clearTimeout(locationScrollIdleTimer);
+
+      if (!locationScrollAnimation) {
+        locationScrollIdleTimer = window.setTimeout(() => {
+          window.requestAnimationFrame(updateActiveLocationFromScroll);
+        }, 90);
       }
     },
     { passive: true },
@@ -2031,7 +2075,6 @@ function ensureScrollReveal() {
       [
         ".section-copy",
         ".section-heading",
-        ".location-card",
         ".food-card",
         ".photo-link",
         ".award-box",
