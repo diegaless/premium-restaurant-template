@@ -1825,6 +1825,27 @@ if (locationRail) {
   setActiveLocationCard(activeLocationIndex, { center: true, behavior: "auto" });
 }
 
+const featureLinksSection = document.querySelector(".feature-links");
+
+if (featureLinksSection) {
+  const setFeatureLinksVisible = (isVisible) => {
+    document.body.classList.toggle("feature-links-active", isVisible);
+  };
+
+  if ("IntersectionObserver" in window) {
+    const featureObserver = new IntersectionObserver(
+      ([entry]) => {
+        setFeatureLinksVisible(entry.isIntersecting && entry.intersectionRatio > 0.38);
+      },
+      { threshold: [0, 0.38, 0.7] },
+    );
+
+    featureObserver.observe(featureLinksSection);
+  } else {
+    setFeatureLinksVisible(true);
+  }
+}
+
 document.querySelectorAll("[data-rail-section]").forEach((section) => {
   const rail = section.querySelector("[data-rail]");
   const previousRail = section.querySelector("[data-rail-prev]");
