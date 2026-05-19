@@ -1709,7 +1709,120 @@ document.addEventListener("submit", (event) => {
 });
 
 if (locationRail) {
-  locationRail.scrollLeft = Math.max(0, locationRail.scrollWidth * 0.12);
+  const locationCards = Array.from(locationRail.querySelectorAll(".location-card"));
+  const locationDots = document.querySelector("[data-location-dots]");
+  const locationsSection = locationRail.closest(".locations");
+  const dotButtons = [];
+  let activeLocationIndex = Math.max(
+    0,
+    locationCards.findIndex((card) => card.classList.contains("is-featured")),
+  );
+  let locationScrollFrame = 0;
+
+  const centerLocationCard = (card, behavior = "smooth") => {
+    if (!card) {
+      return;
+    }
+
+    const left = card.offsetLeft - (locationRail.clientWidth - card.offsetWidth) / 2;
+    locationRail.scrollTo({ left: Math.max(0, left), behavior });
+  };
+
+  const setActiveLocationCard = (index, options = {}) => {
+    const nextIndex = Math.max(0, Math.min(index, locationCards.length - 1));
+    activeLocationIndex = nextIndex;
+
+    locationCards.forEach((card, cardIndex) => {
+      const isActive = cardIndex === nextIndex;
+      card.classList.toggle("is-featured", isActive);
+      card.classList.toggle("is-active", isActive);
+
+      if (isActive) {
+        card.setAttribute("aria-current", "true");
+      } else {
+        card.removeAttribute("aria-current");
+      }
+    });
+
+    dotButtons.forEach((button, buttonIndex) => {
+      const isActive = buttonIndex === nextIndex;
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-current", isActive ? "true" : "false");
+    });
+
+    if (options.center) {
+      window.requestAnimationFrame(() => {
+        centerLocationCard(locationCards[nextIndex], options.behavior || "smooth");
+      });
+    }
+  };
+
+  const updateActiveLocationFromScroll = () => {
+    locationScrollFrame = 0;
+    const viewportCenter = locationRail.scrollLeft + locationRail.clientWidth / 2;
+    const nearestIndex = locationCards.reduce((nearest, card, cardIndex) => {
+      const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+      const distance = Math.abs(cardCenter - viewportCenter);
+      return distance < nearest.distance ? { index: cardIndex, distance } : nearest;
+    }, { index: activeLocationIndex, distance: Number.POSITIVE_INFINITY }).index;
+
+    if (nearestIndex !== activeLocationIndex) {
+      setActiveLocationCard(nearestIndex);
+    }
+  };
+
+  locationCards.forEach((card, cardIndex) => {
+    const title = card.querySelector("h3")?.textContent?.trim() || `location ${cardIndex + 1}`;
+
+    if (locationDots) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.setAttribute("aria-label", `Show ${title}`);
+      button.addEventListener("click", () => setActiveLocationCard(cardIndex, { center: true }));
+      locationDots.append(button);
+      dotButtons.push(button);
+    }
+
+    card.addEventListener("focus", () => setActiveLocationCard(cardIndex, { center: true }), true);
+  });
+
+  locationRail.addEventListener(
+    "scroll",
+    () => {
+      if (!locationScrollFrame) {
+        locationScrollFrame = window.requestAnimationFrame(updateActiveLocationFromScroll);
+      }
+    },
+    { passive: true },
+  );
+
+  window.addEventListener("resize", () => {
+    window.requestAnimationFrame(() => {
+      centerLocationCard(locationCards[activeLocationIndex], "auto");
+    });
+  });
+
+  if (locationDots && locationsSection) {
+    const setLocationCarouselVisible = (isVisible) => {
+      locationsSection.classList.toggle("is-carousel-visible", isVisible);
+      document.body.classList.toggle("location-carousel-active", isVisible);
+    };
+
+    if ("IntersectionObserver" in window) {
+      const locationObserver = new IntersectionObserver(
+        ([entry]) => {
+          setLocationCarouselVisible(entry.isIntersecting && entry.intersectionRatio > 0.32);
+        },
+        { threshold: [0, 0.32, 0.62] },
+      );
+
+      locationObserver.observe(locationsSection);
+    } else {
+      setLocationCarouselVisible(true);
+    }
+  }
+
+  setActiveLocationCard(activeLocationIndex, { center: true, behavior: "auto" });
 }
 
 document.querySelectorAll("[data-rail-section]").forEach((section) => {

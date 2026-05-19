@@ -435,15 +435,27 @@ em {
   font-size: clamp(42px, 5vw, 60px);
 }
 
+.locations {
+  position: relative;
+  min-height: 100svh;
+  overflow: hidden;
+}
+
 .location-carousel {
+  --location-card-width: clamp(292px, 18.6vw, 357px);
+  --location-featured-width: clamp(344px, 21.9vw, 420px);
+  --location-gap: clamp(58px, 5.8vw, 112px);
+
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(250px, 316px);
-  gap: clamp(48px, 7vw, 96px);
+  grid-auto-columns: var(--location-featured-width);
+  gap: var(--location-gap);
   align-items: end;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 22px max(24px, calc((100vw - 1104px) / 2)) 48px;
+  min-height: clamp(650px, 68vh, 740px);
+  padding: 0 max(0px, calc((100vw - 1616px) / 2)) 70px;
+  scroll-padding-inline: calc((100vw - var(--location-featured-width)) / 2);
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
 }
@@ -454,8 +466,14 @@ em {
 
 .location-card {
   display: block;
+  width: var(--location-card-width);
+  justify-self: center;
   scroll-snap-align: center;
   text-align: center;
+  transition:
+    width 420ms ease,
+    filter 420ms ease,
+    opacity 420ms ease;
 }
 
 .location-card img {
@@ -463,15 +481,25 @@ em {
   aspect-ratio: 1278 / 1917;
   object-fit: cover;
   filter: brightness(0.82) contrast(1.04);
+  transition: filter 420ms ease;
+}
+
+.location-card:not(.is-featured) {
+  opacity: 0.92;
 }
 
 .location-card.is-featured {
-  width: min(316px, 76vw);
+  width: var(--location-featured-width);
+  opacity: 1;
+}
+
+.location-card.is-featured img {
+  filter: brightness(0.86) contrast(1.05);
 }
 
 .location-card h3 {
   position: relative;
-  margin: 28px 0 0;
+  margin: 26px 0 0;
   padding-top: 13px;
   font-size: 18px;
   letter-spacing: 4px;
@@ -505,6 +533,40 @@ em {
   position: relative;
   margin-top: 11px;
   padding-top: 13px;
+}
+
+.location-dots {
+  position: fixed;
+  z-index: 58;
+  left: 50%;
+  bottom: 30px;
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  width: max-content;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%);
+  transition: opacity 220ms ease;
+}
+
+.locations.is-carousel-visible .location-dots {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.location-dots button {
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border: 1px solid var(--gold);
+  background: transparent;
+  transform: rotate(45deg);
+  cursor: pointer;
+}
+
+.location-dots button.is-active {
+  background: var(--gold-light);
 }
 
 .cut-button {
@@ -2713,11 +2775,52 @@ body.modal-open {
     font-size: 15px;
   }
 
+  .locations .section-heading {
+    padding-top: 36px;
+    padding-bottom: 14px;
+  }
+
   .location-carousel {
-    grid-auto-columns: minmax(214px, 60vw);
-    gap: 30px;
-    padding-left: 20px;
-    padding-right: 20px;
+    --location-card-width: clamp(220px, 58vw, 300px);
+    --location-featured-width: clamp(260px, 66vw, 326px);
+    --location-gap: 30px;
+
+    min-height: 540px;
+    padding-left: calc((100vw - var(--location-featured-width)) / 2);
+    padding-right: calc((100vw - var(--location-featured-width)) / 2);
+    padding-bottom: 86px;
+  }
+
+  .location-card h3 {
+    margin-top: 18px;
+    padding-top: 11px;
+  }
+
+  .location-card p {
+    margin-top: 5px;
+  }
+
+  .location-card p:last-child {
+    margin-top: 8px;
+    padding-top: 11px;
+  }
+
+  .location-dots {
+    bottom: 24px;
+    gap: 8px;
+  }
+
+  .location-dots button {
+    width: 8px;
+    height: 8px;
+  }
+
+  body.location-carousel-active .quick-actions {
+    bottom: 36px;
+  }
+
+  body.location-carousel-active .location-dots {
+    bottom: 12px;
   }
 
   .food-strip {
@@ -3120,6 +3223,23 @@ body.modal-open {
     top: 48%;
   }
 
+  .location-carousel {
+    --location-card-width: clamp(160px, 28svh, 220px);
+    --location-featured-width: clamp(176px, 31svh, 260px);
+
+    min-height: 430px;
+    padding-bottom: 72px;
+  }
+
+  .location-card h3 {
+    margin-top: 12px;
+    padding-top: 9px;
+  }
+
+  .location-card p:last-child {
+    display: none;
+  }
+
   .location-card h3,
   .location-card p {
     font-size: 13px;
@@ -3161,5 +3281,26 @@ body.modal-open {
 
   .vip-modal-copy h2 {
     font-size: clamp(32px, 12vw, 44px);
+  }
+}
+
+@media (max-width: 480px) and (max-height: 650px) {
+  .location-carousel {
+    --location-card-width: clamp(132px, 24svh, 160px);
+    --location-featured-width: clamp(148px, 27svh, 176px);
+
+    min-height: 360px;
+  }
+
+  .location-card .han {
+    display: none;
+  }
+
+  body.location-carousel-active .quick-actions {
+    bottom: 12px;
+  }
+
+  body.location-carousel-active .location-dots {
+    bottom: 62px;
   }
 }
