@@ -240,13 +240,17 @@ input {
   left: 50%;
   bottom: 74px;
   display: grid;
-  grid-template-columns: 120px 94px 120px;
-  height: 48px;
+  grid-template-columns: 120px 96px 120px;
+  width: 336px;
+  height: 50px;
   transform: translateX(-50%);
-  clip-path: polygon(13px 0, calc(100% - 13px) 0, 100% 13px, 100% calc(100% - 13px), calc(100% - 13px) 100%, 13px 100%, 0 calc(100% - 13px), 0 13px);
-  border: 1px solid var(--gold);
-  background: rgba(0, 0, 0, 0.72);
-  backdrop-filter: blur(8px);
+  clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 14px);
+  border: 1px solid rgba(164, 145, 109, 0.88);
+  background: rgba(10, 10, 9, 0.74);
+  box-shadow:
+    0 14px 28px rgba(0, 0, 0, 0.34),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(9px);
 }
 
 .quick-actions a,
@@ -254,10 +258,10 @@ input {
   display: grid;
   place-items: center;
   border: 0;
-  border-right: 1px solid var(--gold);
+  border-right: 1px solid rgba(164, 145, 109, 0.82);
   color: var(--white);
   background: transparent;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 300;
   cursor: pointer;
 }
@@ -270,17 +274,11 @@ input {
   position: relative;
 }
 
-.nav-toggle span,
-.nav-toggle span::before,
-.nav-toggle span::after {
-  width: 44px;
-  height: 1px;
-  background: var(--gold);
-}
-
 .nav-toggle span {
   position: relative;
   display: block;
+  width: 44px;
+  height: 18px;
 }
 
 .nav-toggle span::before,
@@ -288,23 +286,29 @@ input {
   content: "";
   position: absolute;
   left: 0;
+  width: 44px;
+  height: 1px;
+  background: var(--gold);
 }
 
 .nav-toggle span::before {
-  top: -9px;
+  top: 1px;
 }
 
 .nav-toggle span::after {
-  top: 9px;
+  bottom: 1px;
 }
 
 .nav-toggle::after {
   content: "";
   position: absolute;
-  width: 11px;
-  height: 11px;
+  left: 50%;
+  top: 50%;
+  width: 9px;
+  height: 9px;
   border: 1px solid var(--gold);
-  transform: rotate(45deg);
+  background: rgba(10, 10, 9, 0.74);
+  transform: translate(-50%, -50%) rotate(45deg);
 }
 
 .patterned {
@@ -2646,7 +2650,7 @@ body.modal-open {
   }
 
   .hero-dots {
-    bottom: 112px;
+    bottom: 45px;
   }
 
   .hero-labels {
@@ -2683,9 +2687,9 @@ body.modal-open {
   }
 
   .quick-actions {
-    bottom: 28px;
-    grid-template-columns: 1fr 86px 1fr;
-    width: calc(100vw - 58px);
+    bottom: 74px;
+    grid-template-columns: minmax(0, 120px) minmax(82px, 96px) minmax(0, 120px);
+    width: min(336px, calc(100vw - 40px));
     height: 50px;
   }
 
