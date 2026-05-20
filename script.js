@@ -1719,8 +1719,10 @@ if (locationRail) {
   );
   let locationScrollAnimation = 0;
   let locationScrollIdleTimer = 0;
+  let locationAutoplayTimer = 0;
 
   const locationScrollEase = (progress) => 1 - Math.pow(1 - progress, 2);
+  const locationAutoplayDelay = 5000;
 
   const scrollLocationRailTo = (left, behavior = "smooth") => {
     const targetLeft = Math.max(0, Math.min(left, locationRail.scrollWidth - locationRail.clientWidth));
@@ -1736,7 +1738,7 @@ if (locationRail) {
 
     const startLeft = locationRail.scrollLeft;
     const distance = targetLeft - startLeft;
-    const duration = Math.min(1180, Math.max(820, Math.abs(distance) * 0.46));
+    const duration = 300;
     let startTime = 0;
     locationRail.classList.add("is-programmatic");
 
@@ -1769,8 +1771,65 @@ if (locationRail) {
     scrollLocationRailTo(left, behavior);
   };
 
+  const getLocationStep = () => {
+    if (locationCards.length > 1) {
+      return Math.max(1, locationCards[1].offsetLeft - locationCards[0].offsetLeft);
+    }
+
+    return Math.max(1, locationCards[0]?.offsetWidth || 1);
+  };
+
+  const getShortestLocationDirection = (fromIndex, toIndex) => {
+    const directDistance = toIndex - fromIndex;
+    const wrappedDistance =
+      Math.abs(directDistance) > locationCards.length / 2
+        ? directDistance - Math.sign(directDistance) * locationCards.length
+        : directDistance;
+
+    return Math.sign(wrappedDistance || directDistance || 1);
+  };
+
+  const stageLocationCardNearCenter = (index) => {
+    const card = locationCards[index];
+
+    if (!card) {
+      return;
+    }
+
+    const distance = Math.abs(index - activeLocationIndex);
+
+    if (distance <= 1 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+
+    const direction = getShortestLocationDirection(activeLocationIndex, index);
+    const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+    const stagedLeft = cardCenter - locationRail.clientWidth / 2 - direction * getLocationStep();
+
+    scrollLocationRailTo(stagedLeft, "auto");
+  };
+
+  const scheduleLocationAutoplay = () => {
+    window.clearTimeout(locationAutoplayTimer);
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+
+    locationAutoplayTimer = window.setTimeout(() => {
+      const nextIndex = (activeLocationIndex + 1) % locationCards.length;
+      setActiveLocationCard(nextIndex, { center: true });
+      scheduleLocationAutoplay();
+    }, locationAutoplayDelay);
+  };
+
   const setActiveLocationCard = (index, options = {}) => {
     const nextIndex = Math.max(0, Math.min(index, locationCards.length - 1));
+
+    if (options.center && options.stage) {
+      stageLocationCardNearCenter(nextIndex);
+    }
+
     activeLocationIndex = nextIndex;
 
     locationCards.forEach((card, cardIndex) => {
@@ -1818,12 +1877,22 @@ if (locationRail) {
       const button = document.createElement("button");
       button.type = "button";
       button.setAttribute("aria-label", `Show ${title}`);
-      button.addEventListener("click", () => setActiveLocationCard(cardIndex, { center: true }));
+      button.addEventListener("click", () => {
+        setActiveLocationCard(cardIndex, { center: true, stage: true });
+        scheduleLocationAutoplay();
+      });
       locationDots.append(button);
       dotButtons.push(button);
     }
 
-    card.addEventListener("focus", () => setActiveLocationCard(cardIndex, { center: true }), true);
+    card.addEventListener(
+      "focus",
+      () => {
+        setActiveLocationCard(cardIndex, { center: true, stage: true });
+        scheduleLocationAutoplay();
+      },
+      true,
+    );
   });
 
   locationRail.addEventListener(
@@ -1834,6 +1903,7 @@ if (locationRail) {
       if (!locationScrollAnimation) {
         locationScrollIdleTimer = window.setTimeout(() => {
           window.requestAnimationFrame(updateActiveLocationFromScroll);
+          scheduleLocationAutoplay();
         }, 90);
       }
     },
@@ -1867,6 +1937,7 @@ if (locationRail) {
   }
 
   setActiveLocationCard(activeLocationIndex, { center: true, behavior: "auto" });
+  scheduleLocationAutoplay();
 }
 
 const featureLinksSection = document.querySelector(".feature-links");
