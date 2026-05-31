@@ -6,7 +6,7 @@
   "main": "index.html",
   "scripts": {
     "start": "vite --host 0.0.0.0",
-    "build": "vite build",
+    "build": "vite build && node scripts/copy-config-assets.mjs",
     "preview": "vite preview --host 0.0.0.0",
     "check": "node scripts/visual-check.mjs",
     "check:responsive": "node scripts/responsive-check.mjs"

@@ -42,6 +42,24 @@ npm run preview
 
 The production output is generated in `dist/`.
 
+The build also copies `assets/` into `dist/assets/` with original filenames. That is intentional: client-editable values in `site-config.js` use stable paths such as `/assets/loc-hk.jpg`, while Vite still creates hashed assets for static HTML references.
+
+The Vite config is multipage, so the build includes every route folder:
+
+```text
+/
+/our-cuisine/
+/our-drinks/
+/locations/
+/location/
+/reserve/
+/awards-media/
+/founders/
+/sustainability/
+/careers/
+/privacy-policy/
+```
+
 ## Deploy
 
 Recommended platforms:
