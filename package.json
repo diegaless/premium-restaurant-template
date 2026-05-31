@@ -6,14 +6,15 @@
   "main": "index.html",
   "scripts": {
     "start": "vite --host 0.0.0.0",
-    "preview": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
     "check": "node scripts/visual-check.mjs",
     "check:responsive": "node scripts/responsive-check.mjs"
   },
   "keywords": [],
   "author": "",
   "license": "UNLICENSED",
-  "description": "Static restaurant landing page inspired by Mott 32's editorial layout.",
+  "description": "Configurable premium restaurant website template with reservations, menus, locations and local SEO.",
   "devDependencies": {
     "playwright": "^1.60.0",
     "vite": "^7.2.4"

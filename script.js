@@ -1,3 +1,63 @@
+import { siteConfig } from "./site-config.js";
+
+const templateOverrideStorageKey = `${siteConfig.brand.slug}:templateOverrides`;
+
+function readTemplateOverrides() {
+  try {
+    return JSON.parse(window.localStorage.getItem(templateOverrideStorageKey) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+const templateOverrides = readTemplateOverrides();
+const brand = {
+  ...siteConfig.brand,
+  ...(templateOverrides.brand || {}),
+};
+const activeThemeId = templateOverrides.themePreset || siteConfig.activePreset || "fine-dining";
+const sourceBrandName = siteConfig.brand.sourceName || "Mott 32";
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+const sourceBrandPattern = new RegExp(escapeRegExp(sourceBrandName), "g");
+
+function templateText(value) {
+  if (typeof value !== "string") {
+    return value;
+  }
+
+  return value
+    .replaceAll("{brand}", brand.name)
+    .replaceAll("{email}", brand.email)
+    .replaceAll("{careersEmail}", brand.careersEmail)
+    .replaceAll("{privacyEmail}", brand.privacyEmail)
+    .replace(sourceBrandPattern, brand.name)
+    .replaceAll("reservations@mott32.com", brand.email)
+    .replaceAll("careers@mott32.com", brand.careersEmail)
+    .replaceAll("info@mott32.com", brand.privacyEmail);
+}
+
+function templateObject(object) {
+  return Object.fromEntries(Object.entries(object).map(([key, value]) => [key, templateText(value)]));
+}
+
+function createConfiguredLocations() {
+  return siteConfig.locations.map((location) => ({
+    ...templateObject(location),
+    slug: location.slug,
+    status: location.status,
+    reserve: templateText(location.reserve || ""),
+    email: templateText(location.email || brand.email),
+  }));
+}
+
+function formatRestaurantName(location) {
+  return `${brand.name} ${location.name}`;
+}
+
 const panels = Array.from(document.querySelectorAll(".hero-panel"));
 const dots = Array.from(document.querySelectorAll(".hero-dots button"));
 let heroLabelButtons = [];
@@ -9,10 +69,11 @@ const drawerClose = document.querySelector(".drawer-close");
 const locationRail = document.querySelector("[data-carousel]");
 const lightbox = document.querySelector("[data-lightbox]");
 const locationDetailPage = document.querySelector("[data-location-detail-page]");
-const cookieStorageKey = "mott32CookieChoice";
-const vipStorageKey = "mott32VipSeen";
-const vipStateStorageKey = "mott32VipState";
-const locationStorageKey = "mott32PreferredLocation";
+const cookieStorageKey = `${siteConfig.brand.slug}:cookieChoice`;
+const vipStorageKey = `${siteConfig.brand.slug}:vipSeen`;
+const vipStateStorageKey = `${siteConfig.brand.slug}:vipState`;
+const locationStorageKey = `${siteConfig.brand.slug}:preferredLocation`;
+const templateCookieEvent = `${siteConfig.brand.slug}:cookies-saved`;
 let cookieModal = null;
 let vipModal = null;
 let reserveModal = null;
@@ -20,340 +81,20 @@ let drawerLastActiveElement = null;
 let reserveLastActiveElement = null;
 let reserveDelegationReady = false;
 
-const locationDetails = {
-  "hong-kong": {
-    name: "Hong Kong",
-    han: "香港",
-    region: "Asia",
-    address: "Standard Chartered Bank Building",
-    image: "/assets/loc-hk.jpg",
-    reserve: "https://www.sevenrooms.com/reservations/mott32hk",
-    intro:
-      "Located inside the Standard Chartered Bank Building, Hong Kong is the original Mott 32 and the reference point for the global restaurant family.",
-    copy:
-      "A layered dining room, refined Cantonese cooking and Mott 32 signatures define the restaurant where the brand began.",
-  },
-  singapore: {
-    name: "Singapore",
-    han: "新加坡",
-    region: "Asia",
-    address: "Marina Bay Sands",
-    image: "/assets/loc-singapore.jpg",
-    reserve: "https://www.marinabaysands.com/restaurants/mott32/search.html",
-    intro:
-      "A dramatic Marina Bay Sands dining room with the same signature cuisine, cocktails and service rituals.",
-    copy: "Singapore brings Mott 32's Cantonese, Beijing and Szechuan influences into one of the city's landmark resorts.",
-  },
-  bangkok: {
-    name: "Bangkok",
-    han: "曼谷",
-    region: "Asia",
-    address: "The Standard Bangkok Mahanakhon",
-    image: "/assets/loc-bangkok.jpg",
-    reserve:
-      "https://www.tablecheck.com/en/shops/the-standard-bangkok-mahanakhon-mott32-bangkok/reserve?utm_source=Website&utm_medium=Brandweb",
-    intro:
-      "Set inside The Standard Bangkok Mahanakhon, this location pairs high-rise views with the brand's Cantonese and regional Chinese signatures.",
-    copy: "The Bangkok restaurant carries the full Mott 32 experience into a high-energy dining room above the city.",
-  },
-  seoul: {
-    name: "Seoul",
-    han: "首爾",
-    region: "Asia",
-    address: "Central City",
-    image: "/assets/loc-seoul.jpg",
-    reserve: "https://www.josunhotel.com/resve/dining/step0.do?searchSysCode=JOSUNHOTEL&diningCode=006",
-    intro:
-      "Central City hosts a layered Mott 32 interior with private dining, rich materials and the same signature menu approach.",
-    copy: "Mott 32 Seoul combines warm interiors, private dining and the restaurant's award-winning food and drinks.",
-  },
-  cebu: {
-    name: "Cebu",
-    han: "宿霧",
-    region: "Asia",
-    address: "Nustar Resort",
-    image: "/assets/loc-cebu.jpg",
-    reserve: "https://www.opentable.co.uk/r/mott32-cebu-city",
-    intro:
-      "A resort setting at Nustar Cebu with the familiar Mott 32 focus on dim sum, barbecue, seafood and cocktails.",
-    copy: "Cebu adapts the restaurant's global signatures to a destination resort setting.",
-  },
-  "las-vegas": {
-    name: "Las Vegas",
-    han: "拉斯維加斯",
-    region: "North America",
-    address: "The Venetian Resort",
-    image: "/assets/loc-vegas.jpg",
-    reserve: "https://www.sevenrooms.com/reservations/mott32/brand-website",
-    intro:
-      "Located at The Venetian Resort, Las Vegas combines destination dining, theatrical interiors and Mott 32 signatures.",
-    copy: "A richly detailed room for Peking duck, dim sum, cocktails and group dining on the Las Vegas Strip.",
-  },
-  vancouver: {
-    name: "Vancouver",
-    han: "溫哥華",
-    region: "North America",
-    address: "1161 W Georgia Street",
-    image: "/assets/loc-vancouver.jpg",
-    reserve: "https://www.opentable.ca/r/mott-32-vancouver-2",
-    intro: "The Vancouver restaurant brings the brand's award-winning Chinese cuisine to the centre of the city.",
-    copy: "Vancouver combines a polished dining room with the brand's signature approach to Cantonese barbecue and dim sum.",
-  },
-  toronto: {
-    name: "Toronto",
-    han: "多倫多",
-    region: "North America",
-    address: "190 University Avenue",
-    image: "/assets/loc-toronto.jpg",
-    reserve: "https://app.tablz.com/mott-32",
-    intro: "Toronto carries the global Mott 32 menu into a polished bar, lounge and restaurant environment.",
-    copy: "A city-centre location with a strong bar presence, refined dining and Mott 32's signature menu.",
-  },
-  "los-angeles": {
-    name: "Los Angeles",
-    han: "洛杉磯",
-    region: "North America",
-    address: "Opening 2026",
-    image: "/assets/loc-los-angeles.jpg",
-    reserve: "/reserve/",
-    intro:
-      "Los Angeles is planned as a forthcoming North American location, extending the restaurant family on the West Coast.",
-    copy: "Opening details will follow as the new restaurant approaches launch.",
-  },
-  dubai: {
-    name: "Dubai",
-    han: "迪拜",
-    region: "Middle East",
-    address: "73rd Floor, Address Beach Resort",
-    image: "/assets/loc-dubai.jpg",
-    reserve: "https://www.sevenrooms.com/reservations/mott32dubai/ig",
-    intro:
-      "Mott 32 Dubai sits high inside Address Beach Resort with terrace dining and the brand's signature food and drinks.",
-    copy: "A high-rise dining room and terrace setting for Mott 32 classics, cocktails and skyline views.",
-  },
-};
+const configuredLocations = createConfiguredLocations();
+const locationDetails = Object.fromEntries(configuredLocations.map((location) => [location.slug, location]));
+const locationOrder = configuredLocations.map((location) => location.slug);
+const menuItemsByTitle = new Map();
 
-Object.assign(locationDetails, {
-  bali: {
-    name: "Bali",
-    han: "峇里島",
-    region: "Asia",
-    address: "Opening 2027",
-    image: "/assets/loc-bali.jpg",
-    reserve: "",
-    intro: "Bali is planned as a future Mott 32 destination.",
-    copy: "Opening details will follow closer to launch.",
-  },
-  scottsdale: {
-    name: "Scottsdale",
-    han: "斯科茨代爾",
-    region: "North America",
-    address: "Opening 2026",
-    image: "/assets/loc-scottsdale.jpg",
-    reserve: "",
-    intro: "Scottsdale is planned as a future North American location.",
-    copy: "Opening details will follow closer to launch.",
-  },
-  riyadh: {
-    name: "Riyadh",
-    han: "利雅德",
-    region: "Middle East",
-    address: "Opening 2027",
-    image: "/assets/loc-riyadh.jpg",
-    reserve: "",
-    intro: "Riyadh is planned as a future Middle East location.",
-    copy: "Opening details will follow closer to launch.",
-  },
-  melbourne: {
-    name: "Melbourne",
-    han: "墨爾本",
-    region: "Australia",
-    address: "Opening 2026",
-    image: "/assets/loc-melbourne.jpg",
-    reserve: "",
-    intro: "Melbourne is planned as a future Australian location.",
-    copy: "Opening details will follow closer to launch.",
-  },
+siteConfig.menu.items.forEach((item) => {
+  menuItemsByTitle.set(item.title, item);
+  item.aliases?.forEach((alias) => menuItemsByTitle.set(alias, item));
 });
 
-const locationMeta = {
-  "hong-kong": {
-    status: "open",
-    hours: "Lunch and dinner daily",
-    phone: "+852 2885 8688",
-    email: "reservations@mott32.com",
-    menuNote: "Full signature menu, wine list and cocktail programme.",
-    cuisinePdf: "",
-    drinksPdf: "https://mott32.com/fileadmin/content/Hong_Kong/Menu_PDFs/MTHK_Menu_Wine_260309.pdf",
-  },
-  singapore: {
-    status: "open",
-    hours: "Lunch and dinner daily",
-    phone: "+65 6688 9922",
-    email: "reservations@mott32.com",
-    menuNote: "Marina Bay Sands menus and reservations are handled by the resort.",
-  },
-  bangkok: {
-    status: "open",
-    hours: "Dinner daily",
-    phone: "+66 2 085 8888",
-    email: "reservations@mott32.com",
-    menuNote: "Bangkok signatures and high-rise dining.",
-  },
-  seoul: {
-    status: "open",
-    hours: "Lunch and dinner daily",
-    phone: "+82 2 6282 0320",
-    email: "reservations@mott32.com",
-    menuNote: "Seoul menu and booking are handled by Josun Hotel.",
-  },
-  cebu: {
-    status: "open",
-    hours: "Lunch and dinner daily",
-    phone: "+63 32 888 8282",
-    email: "reservations@mott32.com",
-    menuNote: "Resort dining with signature food and cocktail selections.",
-  },
-  "las-vegas": {
-    status: "open",
-    hours: "Dinner daily",
-    phone: "+1 702 607 3232",
-    email: "reservations@mott32.com",
-    menuNote: "Las Vegas reservations are handled through SevenRooms.",
-  },
-  vancouver: {
-    status: "open",
-    hours: "Dinner daily",
-    phone: "+1 604 979 8886",
-    email: "reservations@mott32.com",
-    menuNote: "Vancouver reservations are handled through OpenTable.",
-  },
-  toronto: {
-    status: "open",
-    hours: "Dinner daily",
-    phone: "+1 416 555 0032",
-    email: "reservations@mott32.com",
-    menuNote: "Toronto reservations are handled through Tablz.",
-  },
-  dubai: {
-    status: "open",
-    hours: "Lunch and dinner daily",
-    phone: "+971 4 278 4832",
-    email: "reservations@mott32.com",
-    menuNote: "Dubai offers terrace dining, cocktails and skyline views.",
-  },
-  "los-angeles": {
-    status: "coming-soon",
-    opening: "Opening 2026",
-    hours: "Coming soon",
-    phone: "",
-    email: "reservations@mott32.com",
-    menuNote: "Menus will be announced closer to opening.",
-  },
-  bali: {
-    status: "coming-soon",
-    opening: "Opening 2027",
-    hours: "Coming soon",
-    phone: "",
-    email: "reservations@mott32.com",
-    menuNote: "Menus will be announced closer to opening.",
-  },
-  scottsdale: {
-    status: "coming-soon",
-    opening: "Opening 2026",
-    hours: "Coming soon",
-    phone: "",
-    email: "reservations@mott32.com",
-    menuNote: "Menus will be announced closer to opening.",
-  },
-  riyadh: {
-    status: "coming-soon",
-    opening: "Opening 2027",
-    hours: "Coming soon",
-    phone: "",
-    email: "reservations@mott32.com",
-    menuNote: "Menus will be announced closer to opening.",
-  },
-  melbourne: {
-    status: "coming-soon",
-    opening: "Opening 2026",
-    hours: "Coming soon",
-    phone: "",
-    email: "reservations@mott32.com",
-    menuNote: "Menus will be announced closer to opening.",
-  },
-};
-
-Object.entries(locationMeta).forEach(([slug, meta]) => {
-  if (locationDetails[slug]) {
-    Object.assign(locationDetails[slug], meta, { slug });
-  }
-});
-
-const locationOrder = [
-  "hong-kong",
-  "las-vegas",
-  "vancouver",
-  "singapore",
-  "dubai",
-  "toronto",
-  "bangkok",
-  "seoul",
-  "cebu",
-  "los-angeles",
-  "scottsdale",
-  "bali",
-  "riyadh",
-  "melbourne",
-];
-
-const menuAvailability = {
-  "Applewood Roasted Peking Duck": ["hong-kong", "las-vegas", "vancouver", "singapore", "dubai", "bangkok", "seoul"],
-  "Crispy Sugar Coated Peking Duck Bun": ["hong-kong", "las-vegas", "vancouver", "dubai", "cebu"],
-  "Signature Iberico Pluma Char Siu": ["hong-kong", "vancouver", "singapore", "dubai", "toronto", "bangkok"],
-  "Prawn & Crab Claw Dumpling": ["hong-kong", "las-vegas", "singapore", "dubai", "cebu", "seoul"],
-  "Prawn and Crab Claw Dumpling": ["hong-kong", "las-vegas", "singapore", "dubai", "cebu", "seoul"],
-  "Matsutake Mushroom": ["hong-kong", "singapore", "dubai", "seoul"],
-  "Soft Quail Egg, Iberico Pork, Black Truffle Siu Mai": ["hong-kong", "las-vegas", "vancouver", "singapore", "dubai"],
-  Hanami: ["hong-kong", "las-vegas", "vancouver", "singapore", "dubai", "bangkok"],
-  "Forbidden Rose": ["hong-kong", "las-vegas", "vancouver", "singapore", "dubai", "toronto"],
-  "Hong Kong Iced Tea": ["hong-kong", "vancouver", "singapore", "dubai", "cebu"],
-  "Old Harbour": ["hong-kong", "las-vegas", "dubai", "bangkok", "seoul"],
-  "Anna Wong": ["hong-kong", "vancouver", "singapore", "toronto"],
-  "Group Restaurant Champion Wine by the Glass": ["hong-kong", "las-vegas", "vancouver", "singapore", "dubai"],
-  "Sake Selection": ["hong-kong", "las-vegas", "singapore", "seoul"],
-  "Joe's Elixir": ["hong-kong", "las-vegas", "dubai", "toronto"],
-};
-
-const vipVariants = [
-  {
-    id: "global",
-    image: "/assets/vip.jpg",
-    eyebrow: "Become",
-    title: "A Global VIP",
-    copy: "Receive exclusive invitations to events and tastings before everyone else.",
-    fieldLabel: "Email",
-    cta: "Sign up",
-  },
-  {
-    id: "tastings",
-    image: "/assets/cuisine-hero-platter.jpg",
-    eyebrow: "Private tastings",
-    title: "First access to seasonal menus",
-    copy: "Be notified about chef tastings, wine dinners and limited menus across the Mott 32 family.",
-    fieldLabel: "Email",
-    cta: "Join the list",
-  },
-  {
-    id: "events",
-    image: "/assets/drinks-hero-forbidden.jpg",
-    eyebrow: "Cocktails & events",
-    title: "Invitations before release",
-    copy: "Join the Global VIP list for cocktail previews, openings and special event announcements.",
-    fieldLabel: "Email",
-    cta: "Become VIP",
-  },
-];
+const menuAvailability = Object.fromEntries(
+  Array.from(menuItemsByTitle.entries()).map(([title, item]) => [title, item.locations]),
+);
+const vipVariants = (siteConfig.vip.variants || []).map(templateObject);
 
 let activePanel = 0;
 let heroTimer = 0;
@@ -363,35 +104,9 @@ let vipLastActiveElement = null;
 let activeLightboxIndex = -1;
 let activeLightboxZoomed = false;
 
-const footerLinks = [
-  { href: "/locations/", label: "All Locations" },
-  { href: "/sustainability/", label: "Sustainability" },
-  { href: "/careers/", label: "Careers" },
-  { href: "/founders/", label: "Founders" },
-  { href: "/our-cuisine/", label: "Our Food" },
-  { href: "/our-drinks/", label: "Our Drinks" },
-  { href: "/awards-media/", label: "Awards & Media" },
-  { href: "/privacy-policy/", label: "Privacy policy" },
-  { href: "mailto:reservations@mott32.com", label: "reservations@mott32.com" },
-];
-
-const socialLinks = [
-  { href: "https://www.facebook.com/MaximalConcepts/", label: "Facebook" },
-  { href: "https://www.instagram.com/maximalconcepts/?hl=en", label: "Instagram" },
-  { href: "https://xhslink.com/m/ADL46x0Ge5F", label: "Xiaohongshu" },
-];
-
-const drawerLinks = [
-  { href: "/", label: "Home" },
-  { href: "/our-cuisine/", label: "Our Cuisine" },
-  { href: "/our-drinks/", label: "Our Drinks" },
-  { href: "/locations/", label: "Locations" },
-  { href: "/reserve/", label: "Reserve" },
-  { href: "/awards-media/", label: "Awards & Media" },
-  { href: "/founders/", label: "Founders" },
-  { href: "/sustainability/", label: "Sustainability" },
-  { href: "/careers/", label: "Careers" },
-];
+const footerLinks = siteConfig.navigation.footer.map(templateObject);
+const socialLinks = siteConfig.socialLinks.map(templateObject);
+const drawerLinks = siteConfig.navigation.drawer.map(templateObject);
 
 function getCurrentPath() {
   if (window.location.pathname === "/") {
@@ -403,6 +118,148 @@ function getCurrentPath() {
 
 function createLink(link) {
   return `<a href="${link.href}">${link.label}</a>`;
+}
+
+function applyTemplateTheme() {
+  const theme = siteConfig.themePresets[activeThemeId] || siteConfig.themePresets["fine-dining"];
+
+  document.documentElement.dataset.templatePreset = activeThemeId;
+  Object.entries(theme?.cssVars || {}).forEach(([property, value]) => {
+    document.documentElement.style.setProperty(property, value);
+  });
+}
+
+function replaceBrandInDom(root = document.body) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      const parent = node.parentElement;
+
+      if (!parent || ["SCRIPT", "STYLE", "NOSCRIPT"].includes(parent.tagName)) {
+        return NodeFilter.FILTER_REJECT;
+      }
+
+      return node.nodeValue.includes(sourceBrandName) ||
+        node.nodeValue.includes("reservations@mott32.com") ||
+        node.nodeValue.includes("careers@mott32.com") ||
+        node.nodeValue.includes("info@mott32.com")
+        ? NodeFilter.FILTER_ACCEPT
+        : NodeFilter.FILTER_REJECT;
+    },
+  });
+
+  const nodes = [];
+  while (walker.nextNode()) {
+    nodes.push(walker.currentNode);
+  }
+
+  nodes.forEach((node) => {
+    node.nodeValue = templateText(node.nodeValue);
+  });
+}
+
+function replaceBrandInAttributes(root = document) {
+  root.querySelectorAll("[alt], [aria-label], [content], [href]").forEach((element) => {
+    ["alt", "aria-label", "content", "href"].forEach((attribute) => {
+      const value = element.getAttribute(attribute);
+
+      if (!value) {
+        return;
+      }
+
+      const nextValue = templateText(value);
+      if (nextValue !== value) {
+        element.setAttribute(attribute, nextValue);
+      }
+    });
+  });
+}
+
+function applyTemplateBranding() {
+  applyTemplateTheme();
+  document.body.dataset.brand = brand.name;
+
+  document.querySelectorAll(".main-logo").forEach((logo) => {
+    logo.src = brand.logo;
+    logo.alt = brand.name;
+  });
+
+  document.querySelectorAll(".footer > img").forEach((logo) => {
+    logo.src = brand.footerLogo || brand.logo;
+    logo.alt = brand.name;
+  });
+
+  replaceBrandInDom();
+  replaceBrandInAttributes();
+}
+
+function saveTemplateOverrides(overrides) {
+  try {
+    window.localStorage.setItem(templateOverrideStorageKey, JSON.stringify(overrides));
+  } catch {
+    return;
+  }
+}
+
+function ensureTemplateEditor() {
+  const params = new URLSearchParams(window.location.search);
+
+  if (!params.has("template") || document.querySelector(".template-editor")) {
+    return;
+  }
+
+  const editor = document.createElement("aside");
+  editor.className = "template-editor";
+  editor.setAttribute("aria-label", "Template quick editor");
+  editor.innerHTML = `
+    <form>
+      <strong>Template</strong>
+      <label>
+        <span>Brand name</span>
+        <input name="brandName" value="${brand.name}" />
+      </label>
+      <label>
+        <span>Reservations email</span>
+        <input name="email" value="${brand.email}" />
+      </label>
+      <label>
+        <span>Style</span>
+        <select name="themePreset">
+          ${Object.entries(siteConfig.themePresets)
+            .map(
+              ([id, preset]) =>
+                `<option value="${id}"${id === activeThemeId ? " selected" : ""}>${preset.label}</option>`,
+            )
+            .join("")}
+        </select>
+      </label>
+      <div>
+        <button type="submit">Preview</button>
+        <button type="button" data-template-reset>Reset</button>
+      </div>
+    </form>
+  `;
+
+  document.body.append(editor);
+  editor.querySelector("form")?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    saveTemplateOverrides({
+      themePreset: data.get("themePreset"),
+      brand: {
+        name: data.get("brandName") || siteConfig.brand.name,
+        email: data.get("email") || siteConfig.brand.email,
+      },
+    });
+    window.location.reload();
+  });
+  editor.querySelector("[data-template-reset]")?.addEventListener("click", () => {
+    try {
+      window.localStorage.removeItem(templateOverrideStorageKey);
+    } catch {
+      return;
+    }
+    window.location.reload();
+  });
 }
 
 function hydrateGlobalNavigation() {
@@ -551,9 +408,17 @@ function getReservableLocations() {
   return getLocations({ includeComingSoon: false }).filter((location) => Boolean(location.reserve));
 }
 
+function getReservationHref(location) {
+  return location.reserve || siteConfig.reservation.fallbackHref;
+}
+
+function isExternalHref(href) {
+  return /^https?:\/\//i.test(href);
+}
+
 function getLocationStatusLabel(location) {
   if (location.status === "open") {
-    return "Reserve";
+    return siteConfig.reservation.primaryLabel;
   }
 
   return location.opening || "Coming soon";
@@ -674,13 +539,13 @@ function createCookiePanel() {
   panel.querySelector("[data-cookie-accept]")?.addEventListener("click", () => {
     saveCookieChoice({ necessary: true, analytics: true, marketing: true });
     removeCookiePanel();
-    document.dispatchEvent(new CustomEvent("mott32:cookies-saved"));
+    document.dispatchEvent(new CustomEvent(templateCookieEvent));
   });
 
   panel.querySelector("[data-cookie-reject]")?.addEventListener("click", () => {
     saveCookieChoice({ necessary: true, analytics: false, marketing: false });
     removeCookiePanel();
-    document.dispatchEvent(new CustomEvent("mott32:cookies-saved"));
+    document.dispatchEvent(new CustomEvent(templateCookieEvent));
   });
 
   panel.querySelector("[data-cookie-settings]")?.addEventListener("click", openCookieModal);
@@ -702,7 +567,7 @@ function createCookieModal() {
       <button class="cookie-close" type="button" data-cookie-close aria-label="Close cookie settings">×</button>
       <p class="eyebrow">Cookie settings</p>
       <h2>Manage preferences</h2>
-      <p>Choose which optional cookies Mott 32 can use on this recreation.</p>
+      <p>Choose which optional cookies ${brand.name} can use on this website.</p>
       <div class="cookie-preferences">
         <label>
           <input type="checkbox" checked disabled />
@@ -743,14 +608,14 @@ function createCookieModal() {
     saveCookieChoice({ necessary: true, analytics, marketing });
     removeCookiePanel();
     closeCookieModal();
-    document.dispatchEvent(new CustomEvent("mott32:cookies-saved"));
+    document.dispatchEvent(new CustomEvent(templateCookieEvent));
   });
 
   cookieModal.querySelector("[data-cookie-accept-all]")?.addEventListener("click", () => {
     saveCookieChoice({ necessary: true, analytics: true, marketing: true });
     removeCookiePanel();
     closeCookieModal();
-    document.dispatchEvent(new CustomEvent("mott32:cookies-saved"));
+    document.dispatchEvent(new CustomEvent(templateCookieEvent));
   });
 }
 
@@ -917,6 +782,10 @@ function closeVipModal() {
 }
 
 function ensureVipControls() {
+  if (!siteConfig.vip.enabled) {
+    return;
+  }
+
   createVipModal();
   document.querySelectorAll("[data-vip-open]").forEach((button) => {
     button.addEventListener("click", () => openVipModal());
@@ -933,10 +802,10 @@ function ensureVipControls() {
     }
 
     const savedAt = Date.parse(getVipState()?.openedAt || "");
-    const sevenDays = 7 * 24 * 60 * 60 * 1000;
+    const reopenDelay = (siteConfig.vip.reopenDays || 7) * 24 * 60 * 60 * 1000;
 
     return (
-      (!savedAt || Date.now() - savedAt > sevenDays) &&
+      (!savedAt || Date.now() - savedAt > reopenDelay) &&
       !drawer?.classList.contains("is-open") &&
       !lightbox?.classList.contains("is-open") &&
       !cookieModal?.classList.contains("is-open") &&
@@ -959,18 +828,18 @@ function ensureVipControls() {
     }, 900);
   };
 
-  window.setTimeout(maybeOpen, 4200);
+  window.setTimeout(maybeOpen, siteConfig.vip.delayMs || 4200);
   window.addEventListener(
     "scroll",
     () => {
-      if (window.scrollY > window.innerHeight * 0.38) {
+      if (window.scrollY > window.innerHeight * (siteConfig.vip.scrollRatio || 0.38)) {
         maybeOpen();
       }
     },
     { passive: true, once: true },
   );
 
-  document.addEventListener("mott32:cookies-saved", () => {
+  document.addEventListener(templateCookieEvent, () => {
     if (!window.sessionStorage.getItem(vipStorageKey)) {
       window.setTimeout(maybeOpen, 1200);
     }
@@ -980,13 +849,15 @@ function ensureVipControls() {
 function createReserveCard(location, compact = false) {
   const statusLabel = getLocationStatusLabel(location);
   const isOpen = location.status === "open" && location.reserve;
+  const reserveHref = getReservationHref(location);
+  const reservationAttributes = isExternalHref(reserveHref) ? ' target="_blank" rel="noopener"' : "";
   const action = isOpen
-    ? `<a class="cut-button reserve-link" href="${location.reserve}" target="_blank" rel="noopener">Reserve</a>`
+    ? `<a class="cut-button reserve-link" href="${reserveHref}"${reservationAttributes}>${siteConfig.reservation.primaryLabel}</a>`
     : `<span class="reserve-status">${statusLabel}</span>`;
 
   return `
     <article class="reserve-card${compact ? " compact" : ""}" data-location="${location.slug}" data-region="${location.region}" data-status="${location.status}">
-      <img src="${location.image}" alt="Mott 32 ${location.name}" />
+      <img src="${location.image}" alt="${formatRestaurantName(location)}" />
       <div>
         <p class="eyebrow">${location.region}</p>
         <h3>${location.name} <span>${location.han}</span></h3>
@@ -1012,13 +883,13 @@ function createReserveModal() {
   reserveModal.setAttribute("aria-hidden", "true");
   reserveModal.setAttribute("role", "dialog");
   reserveModal.setAttribute("aria-modal", "true");
-  reserveModal.setAttribute("aria-label", "Choose a Mott 32 reservation");
+  reserveModal.setAttribute("aria-label", `Choose a ${brand.name} reservation`);
   reserveModal.innerHTML = `
     <div class="reserve-modal-panel">
       <button class="reserve-close" type="button" data-reserve-close aria-label="Close reservations">×</button>
       <div class="section-heading compact-heading">
         <span class="crane-mark" aria-hidden="true"></span>
-        <p class="eyebrow">Choose your Mott 32</p>
+        <p class="eyebrow">Choose your ${brand.name}</p>
         <h2>Reservations</h2>
       </div>
       <label class="select-control">
@@ -1260,7 +1131,7 @@ function hydrateLocationDirectory() {
   mapPanel.innerHTML = `
     <div>
       <p class="eyebrow">Global directory</p>
-      <h2>Find Mott 32 by region</h2>
+      <h2>Find ${brand.name} by region</h2>
     </div>
     <div class="map-region-list">
       ${Array.from(new Set(getLocations().map((location) => location.region)))
@@ -1333,42 +1204,16 @@ function upsertMeta(selector, attributes) {
 
 function applySeoEnhancements() {
   const path = getCurrentPath();
-  const pageData = {
-    "/": {
-      title: "Mott 32 | Award-winning Chinese Restaurant",
-      description:
-        "World-class Chinese restaurants with signature cuisine, cocktails, wine, design-led dining rooms and global locations.",
-      image: "/assets/loc-dubai.jpg",
-    },
-    "/our-cuisine/": {
-      title: "Our Cuisine | Mott 32",
-      description:
-        "Authentic Asian cuisine, dim sum, barbecue, seafood and the signature applewood roasted Peking duck.",
-      image: "/assets/cuisine-hero-duck.jpg",
-    },
-    "/our-drinks/": {
-      title: "Our Drinks | Mott 32",
-      description: "Innovative cocktails, sake selection and an award-winning wine list at Mott 32.",
-      image: "/assets/drinks-hero-forbidden.jpg",
-    },
-    "/locations/": {
-      title: "All Locations | Mott 32",
-      description: "Find Mott 32 restaurants, reservation links, opening-soon locations and regional details.",
-      image: "/assets/loc-hk.jpg",
-    },
-    "/reserve/": {
-      title: "Reserve | Mott 32",
-      description: "Choose your Mott 32 restaurant and reserve directly with each location.",
-      image: "/assets/reserve-bg.jpg",
-    },
-  };
+  const pageData = Object.fromEntries(
+    Object.entries(siteConfig.seo.pages).map(([pagePath, data]) => [pagePath, templateObject(data)]),
+  );
   let selected = pageData[path] || pageData["/"];
 
   if (locationDetailPage) {
     const requestedCity = new URLSearchParams(window.location.search).get("city") || "hong-kong";
     const location = getLocationBySlug(requestedCity);
     selected = {
-      title: `${location.name} | Mott 32`,
+      title: `${location.name} | ${brand.name}`,
       description: `${location.intro} ${location.address}. ${getLocationStatusLabel(location)}.`,
       image: location.image,
     };
@@ -1383,20 +1228,23 @@ function applySeoEnhancements() {
 
   const canonical = canonicalUrl.href;
 
-  document.title = document.title || selected.title;
+  document.title = selected.title;
   upsertMeta('meta[name="description"]', { name: "description", content: selected.description });
   upsertMeta('meta[property="og:title"]', { property: "og:title", content: selected.title });
   upsertMeta('meta[property="og:description"]', { property: "og:description", content: selected.description });
   upsertMeta('meta[property="og:image"]', { property: "og:image", content: imageUrl });
   upsertMeta('meta[property="og:url"]', { property: "og:url", content: canonical });
+  upsertMeta('meta[property="og:site_name"]', { property: "og:site_name", content: brand.name });
+  upsertMeta('meta[property="og:locale"]', { property: "og:locale", content: brand.locale });
   upsertMeta('meta[name="twitter:card"]', { name: "twitter:card", content: "summary_large_image" });
 
-  if (!document.head.querySelector('link[rel="canonical"]')) {
-    const link = document.createElement("link");
-    link.rel = "canonical";
-    link.href = canonical;
-    document.head.append(link);
+  let canonicalLink = document.head.querySelector('link[rel="canonical"]');
+  if (!canonicalLink) {
+    canonicalLink = document.createElement("link");
+    canonicalLink.rel = "canonical";
+    document.head.append(canonicalLink);
   }
+  canonicalLink.href = canonical;
 
   const schema = {
     "@context": "https://schema.org",
@@ -1407,7 +1255,7 @@ function applySeoEnhancements() {
     primaryImageOfPage: imageUrl,
     isPartOf: {
       "@type": "WebSite",
-      name: "Mott 32",
+      name: brand.name,
       url: window.location.origin,
     },
   };
@@ -1420,10 +1268,13 @@ function applySeoEnhancements() {
         position: index + 1,
         item: {
           "@type": "Restaurant",
-          name: `Mott 32 ${location.name}`,
+          name: formatRestaurantName(location),
           image: new URL(location.image, window.location.origin).href,
           address: location.address,
-          servesCuisine: "Chinese",
+          telephone: location.phone || brand.phone,
+          email: location.email || brand.email,
+          priceRange: brand.priceRange,
+          servesCuisine: brand.cuisine,
           url: new URL(`/location/?city=${location.slug}`, window.location.origin).href,
         },
       })),
@@ -1434,11 +1285,21 @@ function applySeoEnhancements() {
     const requestedCity = new URLSearchParams(window.location.search).get("city") || "hong-kong";
     const location = getLocationBySlug(requestedCity);
     schema["@type"] = "Restaurant";
-    schema.name = `Mott 32 ${location.name}`;
+    schema.name = formatRestaurantName(location);
     schema.image = new URL(location.image, window.location.origin).href;
-    schema.address = location.address;
-    schema.telephone = location.phone || undefined;
-    schema.servesCuisine = "Chinese";
+    schema.address = {
+      "@type": "PostalAddress",
+      streetAddress: location.address || siteConfig.seo.localBusiness.streetAddress,
+      addressLocality: location.name || siteConfig.seo.localBusiness.addressLocality,
+      addressRegion: siteConfig.seo.localBusiness.addressRegion,
+      postalCode: siteConfig.seo.localBusiness.postalCode,
+      addressCountry: siteConfig.seo.localBusiness.addressCountry,
+    };
+    schema.telephone = location.phone || brand.phone;
+    schema.email = location.email || brand.email;
+    schema.priceRange = brand.priceRange;
+    schema.servesCuisine = brand.cuisine;
+    schema.sameAs = siteConfig.seo.sameAs;
   }
 
   const script = document.createElement("script");
@@ -1474,7 +1335,7 @@ if (locationDetailPage) {
 
   savePreferredLocation(location.slug);
 
-  document.title = `${location.name} | Mott 32`;
+  document.title = `${location.name} | ${brand.name}`;
   document.querySelector("[data-location-name]").textContent = location.name;
   document.querySelector("[data-location-han]").textContent = location.han;
   document.querySelector("[data-location-region]").textContent = location.region;
@@ -1488,7 +1349,7 @@ if (locationDetailPage) {
     }
 
     image.src = location.image;
-    image.alt = `Mott 32 ${location.name} interior`;
+    image.alt = `${formatRestaurantName(location)} interior`;
   });
 
   if (reserveLink) {
@@ -1501,7 +1362,7 @@ if (locationDetailPage) {
     reserveLink.classList.toggle("is-disabled", !location.reserve);
     reserveLink.setAttribute("aria-disabled", String(!location.reserve));
 
-    if (location.reserve.startsWith("http")) {
+    if (isExternalHref(location.reserve)) {
       reserveLink.target = "_blank";
       reserveLink.rel = "noopener";
     } else {
@@ -1548,7 +1409,7 @@ function setPanel(index) {
 }
 
 function getSlideLabel(panel, index) {
-  return panel.dataset.slideLabel || panel.querySelector("img")?.alt?.replace(/^Mott 32\s*/i, "") || `Slide ${index + 1}`;
+  return panel.dataset.slideLabel || panel.querySelector("img")?.alt?.replace(new RegExp(`^${escapeRegExp(brand.name)}\\s*`, "i"), "") || `Slide ${index + 1}`;
 }
 
 function createHeroLabels() {
@@ -1678,9 +1539,11 @@ function setDrawer(open) {
   }
 }
 
+applyTemplateBranding();
 hydrateGlobalNavigation();
 ensureSkipLink();
 applySeoEnhancements();
+ensureTemplateEditor();
 createHeroLabels();
 attachHeroInteractions();
 ensureCookieControls();
@@ -2221,6 +2084,10 @@ document.querySelectorAll("[data-menu-browser]").forEach((browser) => {
     return card.querySelector("[data-lightbox-title]")?.dataset.lightboxTitle || card.querySelector("strong")?.textContent?.trim() || "";
   }
 
+  function getMenuItem(card) {
+    return menuItemsByTitle.get(getCardTitle(card));
+  }
+
   function getCardLocations(card) {
     const title = getCardTitle(card);
     const explicit = card.dataset.locations?.split(/\s+/).filter(Boolean);
@@ -2272,14 +2139,17 @@ document.querySelectorAll("[data-menu-browser]").forEach((browser) => {
 
     if (links) {
       const winePdf = selected?.drinksPdf || locationDetails["hong-kong"].drinksPdf;
+      const cuisinePdf = selected?.cuisinePdf;
       links.innerHTML = isDrinkPage
         ? `<a class="cut-button small-button" href="${winePdf}" target="_blank" rel="noopener">Wine List</a>`
-        : `<a class="cut-button small-button" href="/reserve/">Reserve selected location</a>`;
+        : `${cuisinePdf ? `<a class="cut-button small-button" href="${cuisinePdf}" target="_blank" rel="noopener">Menu PDF</a>` : ""}<a class="cut-button small-button" href="/reserve/">Reserve selected location</a>`;
     }
   }
 
-  function renderAvailabilityBadge(card, locations) {
+  function renderMenuExtras(card, locations) {
     let badge = card.querySelector(".menu-availability");
+    let details = card.querySelector(".menu-item-details");
+    const item = getMenuItem(card);
     const selected = activeLocation === "all" ? null : getLocationBySlug(activeLocation);
     const text = selected
       ? locations.includes(activeLocation)
@@ -2294,6 +2164,24 @@ document.querySelectorAll("[data-menu-browser]").forEach((browser) => {
     }
 
     badge.textContent = text;
+
+    if (!item) {
+      return;
+    }
+
+    if (!details) {
+      details = document.createElement("small");
+      details.className = "menu-item-details";
+      card.querySelector(".menu-card-trigger")?.append(details);
+    }
+
+    const pieces = [
+      item.price,
+      item.dietary?.length ? item.dietary.join(", ") : "",
+      item.allergens?.length ? `Allergens: ${item.allergens.join(", ")}` : "",
+    ].filter(Boolean);
+
+    details.textContent = pieces.join(" · ");
   }
 
   function updateMenuCards() {
@@ -2307,7 +2195,7 @@ document.querySelectorAll("[data-menu-browser]").forEach((browser) => {
       const matchesLocation = activeLocation === "all" || locations.includes(activeLocation);
 
       card.dataset.locations = locations.join(" ");
-      renderAvailabilityBadge(card, locations);
+      renderMenuExtras(card, locations);
       card.hidden = !(matchesFilter && matchesLocation);
       visibleCount += card.hidden ? 0 : 1;
     });
