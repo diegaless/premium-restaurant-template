@@ -19,6 +19,10 @@ Edit `site-config.js` first:
 - `menu.items`: per-location availability, prices, allergens and tags.
 - `seo.pages`: page titles, descriptions and Open Graph images.
 
+Photos, logos and downloadable menus live in `assets/`. Replace the files there and point `site-config.js` to the new filenames.
+
+The `/?template=1` editor is a browser-only sales preview. It is not a client CMS; restaurant staff would need either a developer editing `site-config.js`/`assets/`, or an added admin/CMS layer.
+
 ## 3. Reservation Providers
 
 Each location can point to:

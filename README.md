@@ -4,6 +4,18 @@ Static HTML, CSS and JavaScript restaurant template designed for premium hospita
 
 The current content and images are preview placeholders. Before selling or deploying for a real client, replace the brand, copy, images, PDFs and reservation links in `site-config.js` and the `assets/` folder.
 
+## Where Client Content Is Edited
+
+Permanent client content is edited in code, not in a hosted admin panel:
+
+- Text, locations, reservation links, menu data, SEO and popup copy: `site-config.js`.
+- Photos, logos, award images and PDF menu files: `assets/`.
+- Page-specific long-form editorial sections that are not yet exposed in config: the matching `index.html` page folder.
+
+The preview editor at `/?template=1` is only for sales demos. It lets you test brand name, reservation email and visual preset in the browser, but it stores those changes in localStorage and does not replace `site-config.js`.
+
+If a restaurant needs to edit text and images themselves after delivery, add a small CMS/admin layer before launch.
+
 ## What Is Configurable
 
 - Brand name, logo, footer logo, emails, phone, cuisine type and price range.
