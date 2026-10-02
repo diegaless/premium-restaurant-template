@@ -1,0 +1,49 @@
+name: Check restaurant websites
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm audit --audit-level=high
+      - run: npm test
+      - run: npm run build:all
+      - run: npx playwright install --with-deps chromium --only-shell
+      - name: Start previews
+        run: |
+          NEWSLETTER_DATA_FILE="$RUNNER_TEMP/example-subscribers.jsonl" npm run serve > "$RUNNER_TEMP/example-server.log" 2>&1 &
+          PORT=4174 NEWSLETTER_DATA_FILE="$RUNNER_TEMP/template-subscribers.jsonl" npm run serve:template > "$RUNNER_TEMP/template-server.log" 2>&1 &
+          for port in 4173 4174; do
+            curl --fail --retry 10 --retry-connrefused --retry-delay 1 "http://127.0.0.1:$port/site-runtime.json"
+          done
+      - name: Check example
+        env:
+          CHECK_URL: http://127.0.0.1:4173
+        run: |
+          npm run check:links
+          npm run check:carousels
+          npm run check
+          npm run check:responsive
+          npm run check:flows
+      - name: Check generic template
+        env:
+          CHECK_URL: http://127.0.0.1:4174
+        run: |
+          npm run check:links
+          npm run check:carousels
+          npm run check
+          npm run check:responsive
+          npm run check:flows

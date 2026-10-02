@@ -1,4 +1,10 @@
-import { siteConfig } from "./site-config.js";
+import { initHomeCarousels } from "./core/carousels.js";
+import { siteConfig } from "virtual:restaurant-config";
+import { asset, escapeHtml, label, pagePath, requestedLocation, applyImage, sitePath } from "./core/config.js";
+import { reservationCard } from "./core/render.js";
+import { applySeo } from "./core/seo.js";
+import { attachNewsletterForms } from "./core/newsletter.js";
+import { localizeInterface } from "./core/locale.js";
 
 const templateOverrideStorageKey = `${siteConfig.brand.slug}:templateOverrides`;
 
@@ -10,13 +16,13 @@ function readTemplateOverrides() {
   }
 }
 
-const templateOverrides = readTemplateOverrides();
+const templateOverrides = siteConfig.seo.indexable ? {} : readTemplateOverrides();
 const brand = {
   ...siteConfig.brand,
   ...(templateOverrides.brand || {}),
 };
 const activeThemeId = templateOverrides.themePreset || siteConfig.activePreset || "fine-dining";
-const sourceBrandName = siteConfig.brand.sourceName || "Mott 32";
+const sourceBrandName = siteConfig.brand.name;
 
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -48,8 +54,11 @@ function createConfiguredLocations() {
   return siteConfig.locations.map((location) => ({
     ...templateObject(location),
     slug: location.slug,
+    image: asset(siteConfig, location.image),
     status: location.status,
-    reserve: templateText(location.reserve || ""),
+    reserve: sitePath(siteConfig, templateText(location.reserve || "")),
+    cuisinePdf: sitePath(siteConfig, location.cuisinePdf || ""),
+    drinksPdf: sitePath(siteConfig, location.drinksPdf || ""),
     email: templateText(location.email || brand.email),
   }));
 }
@@ -66,7 +75,6 @@ const next = document.querySelector(".side-arrow-right");
 const drawer = document.querySelector(".drawer");
 const navToggle = document.querySelector(".nav-toggle");
 const drawerClose = document.querySelector(".drawer-close");
-const locationRail = document.querySelector("[data-carousel]");
 const lightbox = document.querySelector("[data-lightbox]");
 const locationDetailPage = document.querySelector("[data-location-detail-page]");
 const cookieStorageKey = `${siteConfig.brand.slug}:cookieChoice`;
@@ -108,16 +116,10 @@ const footerLinks = siteConfig.navigation.footer.map(templateObject);
 const socialLinks = siteConfig.socialLinks.map(templateObject);
 const drawerLinks = siteConfig.navigation.drawer.map(templateObject);
 
-function getCurrentPath() {
-  if (window.location.pathname === "/") {
-    return "/";
-  }
-
-  return window.location.pathname.endsWith("/") ? window.location.pathname : `${window.location.pathname}/`;
-}
+function getCurrentPath() { return pagePath(window.location.href, siteConfig); }
 
 function createLink(link) {
-  return `<a href="${link.href}">${link.label}</a>`;
+  return `<a href="${escapeHtml(sitePath(siteConfig, link.href))}">${escapeHtml(link.label)}</a>`;
 }
 
 function applyTemplateTheme() {
@@ -179,12 +181,12 @@ function applyTemplateBranding() {
   document.body.dataset.brand = brand.name;
 
   document.querySelectorAll(".main-logo").forEach((logo) => {
-    logo.src = brand.logo;
+    logo.src = asset(siteConfig, brand.logo);
     logo.alt = brand.name;
   });
 
   document.querySelectorAll(".footer > img").forEach((logo) => {
-    logo.src = brand.footerLogo || brand.logo;
+    logo.src = asset(siteConfig, brand.footerLogo || brand.logo);
     logo.alt = brand.name;
   });
 
@@ -203,7 +205,7 @@ function saveTemplateOverrides(overrides) {
 function ensureTemplateEditor() {
   const params = new URLSearchParams(window.location.search);
 
-  if (!params.has("template") || document.querySelector(".template-editor")) {
+  if (siteConfig.seo.indexable || !params.has("template") || document.querySelector(".template-editor")) {
     return;
   }
 
@@ -215,11 +217,11 @@ function ensureTemplateEditor() {
       <strong>Template</strong>
       <label>
         <span>Brand name</span>
-        <input name="brandName" value="${brand.name}" />
+        <input name="brandName" value="${escapeHtml(brand.name)}" />
       </label>
       <label>
         <span>Reservations email</span>
-        <input name="email" value="${brand.email}" />
+        <input name="email" value="${escapeHtml(brand.email)}" />
       </label>
       <label>
         <span>Style</span>
@@ -268,17 +270,17 @@ function hydrateGlobalNavigation() {
   const drawerNav = drawer?.querySelector("nav");
   const currentPath = getCurrentPath();
 
-  if (footer && !footer.querySelector(".footer-social")) {
-    footer.querySelector("img")?.insertAdjacentHTML(
+  if (socialLinks.length && footer && !footer.querySelector(".footer-social")) {
+    footer.querySelector("img, .footer-wordmark")?.insertAdjacentHTML(
       "afterend",
       `<div class="footer-social"><p>Social</p>${socialLinks
-        .map((link) => `<a href="${link.href}" target="_blank" rel="noopener">${link.label}</a>`)
+        .map((link) => `<a href="${escapeHtml(link.href)}" target="_blank" rel="noopener">${escapeHtml(link.label)}</a>`)
         .join("")}</div>`,
     );
   }
 
   if (footerNav) {
-    footerNav.innerHTML = `${footerLinks.map(createLink).join("")}<button class="footer-link-button" type="button" data-vip-open>Global VIP</button><button class="footer-link-button" type="button" data-cookie-settings>Cookie settings</button>`;
+    footerNav.innerHTML = `${footerLinks.map(createLink).join("")}${siteConfig.vip.enabled ? '<button class="footer-link-button" type="button" data-vip-open>Global VIP</button>' : ""}<button class="footer-link-button" type="button" data-cookie-settings>Cookie settings</button>`;
   }
 
   if (drawerNav) {
@@ -286,7 +288,7 @@ function hydrateGlobalNavigation() {
   }
 
   document.querySelectorAll(".footer nav a, .drawer nav a").forEach((link) => {
-    const linkPath = new URL(link.href, window.location.origin).pathname;
+    const linkPath = pagePath(link.href, siteConfig);
     const normalisedLinkPath = linkPath === "/" ? "/" : `${linkPath.replace(/\/$/, "")}/`;
 
     if (normalisedLinkPath === currentPath) {
@@ -349,7 +351,7 @@ function getLocations(options = {}) {
 }
 
 function getLocationBySlug(slug) {
-  return locationDetails[slug] || locationDetails["hong-kong"];
+  return locationDetails[slug] || configuredLocations[0];
 }
 
 function isKnownLocation(slug, options = {}) {
@@ -401,7 +403,7 @@ function getPreferredLocationSlug(options = {}) {
     return stored;
   }
 
-  return allowAll ? fallback : fallback === "all" ? "hong-kong" : fallback;
+  return allowAll ? fallback : isKnownLocation(fallback) ? fallback : configuredLocations[0].slug;
 }
 
 function getReservableLocations() {
@@ -418,7 +420,7 @@ function isExternalHref(href) {
 
 function getLocationStatusLabel(location) {
   if (location.status === "open") {
-    return siteConfig.reservation.primaryLabel;
+    return label(siteConfig, "open", "Open");
   }
 
   return location.opening || "Coming soon";
@@ -679,7 +681,7 @@ function createVipModal() {
     <div class="vip-modal-panel">
       <button class="vip-close" type="button" data-vip-close aria-label="Close Global VIP signup">×</button>
       <figure>
-        <img data-vip-image src="/assets/vip.jpg" alt="Traditional banquet dish" />
+        <img data-vip-image src="${escapeHtml(asset(siteConfig, vipVariants[0]?.image || ""))}" alt="" loading="lazy" />
       </figure>
       <div class="vip-modal-copy">
         <p class="eyebrow" data-vip-eyebrow>Become</p>
@@ -741,7 +743,7 @@ function renderVipVariant(variant) {
   const cta = vipModal.querySelector("[data-vip-cta]");
 
   if (image) {
-    image.src = variant.image;
+    applyImage(image, siteConfig, variant.image);
     image.alt = variant.title;
   }
 
@@ -782,11 +784,12 @@ function closeVipModal() {
 }
 
 function ensureVipControls() {
-  if (!siteConfig.vip.enabled) {
+  if (!siteConfig.vip.enabled || !vipVariants.length) {
     return;
   }
 
   createVipModal();
+  attachNewsletterForms(document, siteConfig);
   document.querySelectorAll("[data-vip-open]").forEach((button) => {
     button.addEventListener("click", () => openVipModal());
   });
@@ -847,29 +850,7 @@ function ensureVipControls() {
 }
 
 function createReserveCard(location, compact = false) {
-  const statusLabel = getLocationStatusLabel(location);
-  const isOpen = location.status === "open" && location.reserve;
-  const reserveHref = getReservationHref(location);
-  const reservationAttributes = isExternalHref(reserveHref) ? ' target="_blank" rel="noopener"' : "";
-  const action = isOpen
-    ? `<a class="cut-button reserve-link" href="${reserveHref}"${reservationAttributes}>${siteConfig.reservation.primaryLabel}</a>`
-    : `<span class="reserve-status">${statusLabel}</span>`;
-
-  return `
-    <article class="reserve-card${compact ? " compact" : ""}" data-location="${location.slug}" data-region="${location.region}" data-status="${location.status}">
-      <img src="${location.image}" alt="${formatRestaurantName(location)}" />
-      <div>
-        <p class="eyebrow">${location.region}</p>
-        <h3>${location.name} <span>${location.han}</span></h3>
-        <p>${location.address}</p>
-        <dl>
-          <div><dt>Status</dt><dd>${statusLabel}</dd></div>
-          <div><dt>Hours</dt><dd>${location.hours}</dd></div>
-        </dl>
-        ${action}
-      </div>
-    </article>
-  `;
+  return reservationCard({ ...siteConfig, brand }, location, compact);
 }
 
 function createReserveModal() {
@@ -901,7 +882,7 @@ function createReserveModal() {
         </select>
       </label>
       <div class="reserve-modal-detail" data-reserve-detail></div>
-      <a class="reserve-full-link" href="/reserve/">View all reservations</a>
+      <a class="reserve-full-link" href="${sitePath(siteConfig, "/reserve/")}">View all reservations</a>
     </div>
   `;
 
@@ -913,10 +894,10 @@ function createReserveModal() {
     const location = getLocationBySlug(select.value);
     savePreferredLocation(location.slug);
     detail.innerHTML = createReserveCard(location, true);
-    reserveModal.querySelector(".reserve-full-link").href = `/reserve/?city=${location.slug}`;
+    reserveModal.querySelector(".reserve-full-link").href = sitePath(siteConfig, `/reserve/?city=${location.slug}`);
   };
 
-  const preferred = getPreferredLocationSlug({ allowAll: false, openOnly: false, fallback: "hong-kong" });
+  const preferred = getPreferredLocationSlug({ allowAll: false, openOnly: false, fallback: configuredLocations[0].slug });
   if (select && isKnownLocation(preferred, { openOnly: false })) {
     select.value = preferred;
   }
@@ -935,6 +916,9 @@ function createReserveModal() {
 function openReserveModal(event) {
   event?.preventDefault();
   createReserveModal();
+  const select = reserveModal.querySelector("[data-reserve-select]");
+  select.value = getPreferredLocationSlug({allowAll:false,openOnly:false,fallback:configuredLocations[0].slug});
+  select.dispatchEvent(new Event("change"));
   reserveLastActiveElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   setDialogOpen(reserveModal, true, null, "[data-reserve-select]");
 }
@@ -957,11 +941,12 @@ function ensureReserveControls() {
 
   reserveDelegationReady = true;
   document.addEventListener("click", (event) => {
-    const link = event.target.closest('a[href="/reserve/"], a[href="/reserve"]');
+    const link = event.target.closest("a[href]");
 
     if (!link || link.classList.contains("reserve-full-link")) {
       return;
     }
+    if (new URL(link.href).origin !== window.location.origin || pagePath(link.href, siteConfig) !== "/reserve/") return;
 
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button) {
       return;
@@ -1079,7 +1064,7 @@ function hydrateLocationDirectory() {
 
   tiles.forEach((tile) => {
     const heading = tile.querySelector("h3")?.childNodes[0]?.textContent?.trim() || "";
-    const slug = normaliseLocationName(heading);
+    const slug = tile.dataset.location || normaliseLocationName(heading);
     const location = getLocationBySlug(slug);
 
     tile.dataset.location = location.slug;
@@ -1191,121 +1176,8 @@ function hydrateLocationDirectory() {
   update();
 }
 
-function upsertMeta(selector, attributes) {
-  let element = document.head.querySelector(selector);
-
-  if (!element) {
-    element = document.createElement("meta");
-    document.head.append(element);
-  }
-
-  Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, value));
-}
-
 function applySeoEnhancements() {
-  const path = getCurrentPath();
-  const pageData = Object.fromEntries(
-    Object.entries(siteConfig.seo.pages).map(([pagePath, data]) => [pagePath, templateObject(data)]),
-  );
-  let selected = pageData[path] || pageData["/"];
-
-  if (locationDetailPage) {
-    const requestedCity = new URLSearchParams(window.location.search).get("city") || "hong-kong";
-    const location = getLocationBySlug(requestedCity);
-    selected = {
-      title: `${location.name} | ${brand.name}`,
-      description: `${location.intro} ${location.address}. ${getLocationStatusLabel(location)}.`,
-      image: location.image,
-    };
-  }
-  const imageUrl = new URL(selected.image, window.location.origin).href;
-  const canonicalUrl = new URL(path, window.location.origin);
-
-  if (locationDetailPage) {
-    const requestedCity = new URLSearchParams(window.location.search).get("city") || "hong-kong";
-    canonicalUrl.searchParams.set("city", getLocationBySlug(requestedCity).slug);
-  }
-
-  const canonical = canonicalUrl.href;
-
-  document.title = selected.title;
-  upsertMeta('meta[name="description"]', { name: "description", content: selected.description });
-  upsertMeta('meta[property="og:title"]', { property: "og:title", content: selected.title });
-  upsertMeta('meta[property="og:description"]', { property: "og:description", content: selected.description });
-  upsertMeta('meta[property="og:image"]', { property: "og:image", content: imageUrl });
-  upsertMeta('meta[property="og:url"]', { property: "og:url", content: canonical });
-  upsertMeta('meta[property="og:site_name"]', { property: "og:site_name", content: brand.name });
-  upsertMeta('meta[property="og:locale"]', { property: "og:locale", content: brand.locale });
-  upsertMeta('meta[name="twitter:card"]', { name: "twitter:card", content: "summary_large_image" });
-
-  let canonicalLink = document.head.querySelector('link[rel="canonical"]');
-  if (!canonicalLink) {
-    canonicalLink = document.createElement("link");
-    canonicalLink.rel = "canonical";
-    document.head.append(canonicalLink);
-  }
-  canonicalLink.href = canonical;
-
-  const schema = {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    name: selected.title,
-    description: selected.description,
-    url: canonical,
-    primaryImageOfPage: imageUrl,
-    isPartOf: {
-      "@type": "WebSite",
-      name: brand.name,
-      url: window.location.origin,
-    },
-  };
-
-  if (path === "/locations/" || path === "/reserve/") {
-    schema.mainEntity = {
-      "@type": "ItemList",
-      itemListElement: getLocations().map((location, index) => ({
-        "@type": "ListItem",
-        position: index + 1,
-        item: {
-          "@type": "Restaurant",
-          name: formatRestaurantName(location),
-          image: new URL(location.image, window.location.origin).href,
-          address: location.address,
-          telephone: location.phone || brand.phone,
-          email: location.email || brand.email,
-          priceRange: brand.priceRange,
-          servesCuisine: brand.cuisine,
-          url: new URL(`/location/?city=${location.slug}`, window.location.origin).href,
-        },
-      })),
-    };
-  }
-
-  if (locationDetailPage) {
-    const requestedCity = new URLSearchParams(window.location.search).get("city") || "hong-kong";
-    const location = getLocationBySlug(requestedCity);
-    schema["@type"] = "Restaurant";
-    schema.name = formatRestaurantName(location);
-    schema.image = new URL(location.image, window.location.origin).href;
-    schema.address = {
-      "@type": "PostalAddress",
-      streetAddress: location.address || siteConfig.seo.localBusiness.streetAddress,
-      addressLocality: location.name || siteConfig.seo.localBusiness.addressLocality,
-      addressRegion: siteConfig.seo.localBusiness.addressRegion,
-      postalCode: siteConfig.seo.localBusiness.postalCode,
-      addressCountry: siteConfig.seo.localBusiness.addressCountry,
-    };
-    schema.telephone = location.phone || brand.phone;
-    schema.email = location.email || brand.email;
-    schema.priceRange = brand.priceRange;
-    schema.servesCuisine = brand.cuisine;
-    schema.sameAs = siteConfig.seo.sameAs;
-  }
-
-  const script = document.createElement("script");
-  script.type = "application/ld+json";
-  script.textContent = JSON.stringify(schema);
-  document.head.append(script);
+  applySeo(document, { ...siteConfig, brand }, window.location.href);
 }
 
 function ensureScrollTop() {
@@ -1327,8 +1199,8 @@ function ensureScrollTop() {
 }
 
 if (locationDetailPage) {
-  const requestedCity = new URLSearchParams(window.location.search).get("city") || "hong-kong";
-  const location = locationDetails[requestedCity] || locationDetails["hong-kong"];
+  const requestedCity = requestedLocation(window.location.href, siteConfig).slug;
+  const location = locationDetails[requestedCity] || configuredLocations[0];
   const heroImage = document.querySelector("[data-location-hero]");
   const detailImage = document.querySelector("[data-location-image]");
   const reserveLink = document.querySelector("[data-location-reserve]");
@@ -1337,7 +1209,11 @@ if (locationDetailPage) {
 
   document.title = `${location.name} | ${brand.name}`;
   document.querySelector("[data-location-name]").textContent = location.name;
-  document.querySelector("[data-location-han]").textContent = location.han;
+  const locationHan = document.querySelector("[data-location-han]");
+  if (locationHan) {
+    locationHan.textContent = location.han;
+    locationHan.hidden = !(location.han || "").trim();
+  }
   document.querySelector("[data-location-region]").textContent = location.region;
   document.querySelector("[data-location-address]").textContent = location.address;
   document.querySelector("[data-location-intro]").textContent = location.intro;
@@ -1348,7 +1224,7 @@ if (locationDetailPage) {
       return;
     }
 
-    image.src = location.image;
+    applyImage(image, siteConfig, location.image);
     image.alt = `${formatRestaurantName(location)} interior`;
   });
 
@@ -1373,7 +1249,7 @@ if (locationDetailPage) {
 
   document.querySelectorAll(".location-menu-links a").forEach((link) => {
     const url = new URL(link.href, window.location.origin);
-    if (url.pathname === "/our-cuisine/" || url.pathname === "/our-drinks/") {
+    if (["/our-cuisine/", "/our-drinks/"].includes(pagePath(url.href, siteConfig))) {
       url.searchParams.set("city", location.slug);
       link.href = `${url.pathname}?${url.searchParams.toString()}`;
     }
@@ -1451,7 +1327,7 @@ function createHeroLabels() {
 }
 
 function restartHero() {
-  if (panels.length < 2) {
+  if (panels.length < 2 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
     return;
   }
 
@@ -1562,246 +1438,9 @@ drawer?.addEventListener("click", (event) => {
   }
 });
 
-document.addEventListener("submit", (event) => {
-  if (!event.target.matches(".signup-form")) {
-    return;
-  }
+attachNewsletterForms(document, siteConfig);
 
-  event.preventDefault();
-  event.target.querySelector("button").textContent = "Thank you";
-});
-
-if (locationRail) {
-  const locationCards = Array.from(locationRail.querySelectorAll(".location-card"));
-  const locationDots = document.querySelector("[data-location-dots]");
-  const locationsSection = locationRail.closest(".locations");
-  const dotButtons = [];
-  let activeLocationIndex = Math.max(
-    0,
-    locationCards.findIndex((card) => card.classList.contains("is-featured")),
-  );
-  let locationScrollAnimation = 0;
-  let locationScrollIdleTimer = 0;
-  let locationAutoplayTimer = 0;
-
-  const locationScrollEase = (progress) => 1 - Math.pow(1 - progress, 2);
-  const locationAutoplayDelay = 5000;
-
-  const scrollLocationRailTo = (left, behavior = "smooth") => {
-    const targetLeft = Math.max(0, Math.min(left, locationRail.scrollWidth - locationRail.clientWidth));
-
-    window.cancelAnimationFrame(locationScrollAnimation);
-
-    if (behavior === "auto" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      locationRail.classList.remove("is-programmatic");
-      locationRail.scrollLeft = targetLeft;
-      locationScrollAnimation = 0;
-      return;
-    }
-
-    const startLeft = locationRail.scrollLeft;
-    const distance = targetLeft - startLeft;
-    const duration = 300;
-    let startTime = 0;
-    locationRail.classList.add("is-programmatic");
-
-    const animate = (time) => {
-      if (!startTime) {
-        startTime = time;
-      }
-
-      const progress = Math.min(1, (time - startTime) / duration);
-      locationRail.scrollLeft = startLeft + distance * locationScrollEase(progress);
-
-      if (progress < 1) {
-        locationScrollAnimation = window.requestAnimationFrame(animate);
-      } else {
-        locationRail.scrollLeft = targetLeft;
-        locationRail.classList.remove("is-programmatic");
-        locationScrollAnimation = 0;
-      }
-    };
-
-    locationScrollAnimation = window.requestAnimationFrame(animate);
-  };
-
-  const centerLocationCard = (card, behavior = "smooth") => {
-    if (!card) {
-      return;
-    }
-
-    const left = card.offsetLeft + card.offsetWidth / 2 - locationRail.clientWidth / 2;
-    scrollLocationRailTo(left, behavior);
-  };
-
-  const getLocationStep = () => {
-    if (locationCards.length > 1) {
-      return Math.max(1, locationCards[1].offsetLeft - locationCards[0].offsetLeft);
-    }
-
-    return Math.max(1, locationCards[0]?.offsetWidth || 1);
-  };
-
-  const getShortestLocationDirection = (fromIndex, toIndex) => {
-    const directDistance = toIndex - fromIndex;
-    const wrappedDistance =
-      Math.abs(directDistance) > locationCards.length / 2
-        ? directDistance - Math.sign(directDistance) * locationCards.length
-        : directDistance;
-
-    return Math.sign(wrappedDistance || directDistance || 1);
-  };
-
-  const stageLocationCardNearCenter = (index) => {
-    const card = locationCards[index];
-
-    if (!card) {
-      return;
-    }
-
-    const distance = Math.abs(index - activeLocationIndex);
-
-    if (distance <= 1 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      return;
-    }
-
-    const direction = getShortestLocationDirection(activeLocationIndex, index);
-    const cardCenter = card.offsetLeft + card.offsetWidth / 2;
-    const stagedLeft = cardCenter - locationRail.clientWidth / 2 - direction * getLocationStep();
-
-    scrollLocationRailTo(stagedLeft, "auto");
-  };
-
-  const scheduleLocationAutoplay = () => {
-    window.clearTimeout(locationAutoplayTimer);
-
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      return;
-    }
-
-    locationAutoplayTimer = window.setTimeout(() => {
-      const nextIndex = (activeLocationIndex + 1) % locationCards.length;
-      setActiveLocationCard(nextIndex, { center: true });
-      scheduleLocationAutoplay();
-    }, locationAutoplayDelay);
-  };
-
-  const setActiveLocationCard = (index, options = {}) => {
-    const nextIndex = Math.max(0, Math.min(index, locationCards.length - 1));
-
-    if (options.center && options.stage) {
-      stageLocationCardNearCenter(nextIndex);
-    }
-
-    activeLocationIndex = nextIndex;
-
-    locationCards.forEach((card, cardIndex) => {
-      const isActive = cardIndex === nextIndex;
-      card.classList.toggle("is-featured", isActive);
-      card.classList.toggle("is-active", isActive);
-
-      if (isActive) {
-        card.setAttribute("aria-current", "true");
-      } else {
-        card.removeAttribute("aria-current");
-      }
-    });
-
-    dotButtons.forEach((button, buttonIndex) => {
-      const isActive = buttonIndex === nextIndex;
-      button.classList.toggle("is-active", isActive);
-      button.setAttribute("aria-current", isActive ? "true" : "false");
-    });
-
-    if (options.center) {
-      window.requestAnimationFrame(() => {
-        centerLocationCard(locationCards[nextIndex], options.behavior || "smooth");
-      });
-    }
-  };
-
-  const updateActiveLocationFromScroll = () => {
-    const viewportCenter = locationRail.scrollLeft + locationRail.clientWidth / 2;
-    const nearestIndex = locationCards.reduce((nearest, card, cardIndex) => {
-      const cardCenter = card.offsetLeft + card.offsetWidth / 2;
-      const distance = Math.abs(cardCenter - viewportCenter);
-      return distance < nearest.distance ? { index: cardIndex, distance } : nearest;
-    }, { index: activeLocationIndex, distance: Number.POSITIVE_INFINITY }).index;
-
-    if (nearestIndex !== activeLocationIndex) {
-      setActiveLocationCard(nearestIndex);
-    }
-  };
-
-  locationCards.forEach((card, cardIndex) => {
-    const title = card.querySelector("h3")?.textContent?.trim() || `location ${cardIndex + 1}`;
-
-    if (locationDots) {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.setAttribute("aria-label", `Show ${title}`);
-      button.addEventListener("click", () => {
-        setActiveLocationCard(cardIndex, { center: true, stage: true });
-        scheduleLocationAutoplay();
-      });
-      locationDots.append(button);
-      dotButtons.push(button);
-    }
-
-    card.addEventListener(
-      "focus",
-      () => {
-        setActiveLocationCard(cardIndex, { center: true, stage: true });
-        scheduleLocationAutoplay();
-      },
-      true,
-    );
-  });
-
-  locationRail.addEventListener(
-    "scroll",
-    () => {
-      window.clearTimeout(locationScrollIdleTimer);
-
-      if (!locationScrollAnimation) {
-        locationScrollIdleTimer = window.setTimeout(() => {
-          window.requestAnimationFrame(updateActiveLocationFromScroll);
-          scheduleLocationAutoplay();
-        }, 90);
-      }
-    },
-    { passive: true },
-  );
-
-  window.addEventListener("resize", () => {
-    window.requestAnimationFrame(() => {
-      centerLocationCard(locationCards[activeLocationIndex], "auto");
-    });
-  });
-
-  if (locationDots && locationsSection) {
-    const setLocationCarouselVisible = (isVisible) => {
-      locationsSection.classList.toggle("is-carousel-visible", isVisible);
-      document.body.classList.toggle("location-carousel-active", isVisible);
-    };
-
-    if ("IntersectionObserver" in window) {
-      const locationObserver = new IntersectionObserver(
-        ([entry]) => {
-          setLocationCarouselVisible(entry.isIntersecting && entry.intersectionRatio > 0.32);
-        },
-        { threshold: [0, 0.32, 0.62] },
-      );
-
-      locationObserver.observe(locationsSection);
-    } else {
-      setLocationCarouselVisible(true);
-    }
-  }
-
-  setActiveLocationCard(activeLocationIndex, { center: true, behavior: "auto" });
-  scheduleLocationAutoplay();
-}
+initHomeCarousels(document);
 
 const featureLinksSection = document.querySelector(".feature-links");
 
@@ -1829,7 +1468,7 @@ document.querySelectorAll("[data-rail-section]").forEach((section) => {
   const previousRail = section.querySelector("[data-rail-prev]");
   const nextRail = section.querySelector("[data-rail-next]");
 
-  if (!rail) {
+  if (!rail || rail.classList.contains("food-rail")) {
     return;
   }
 
@@ -1848,15 +1487,20 @@ document.querySelectorAll("[data-rail-section]").forEach((section) => {
   rail.setAttribute("aria-label", section.getAttribute("aria-label") || "Carousel");
 
   let startX = 0;
+  let startY = 0;
   let startScroll = 0;
+  let trackingPointer = false;
   let dragging = false;
+  let dragged = false;
+  let railVisible = false;
   let railTimer = 0;
+  const railMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
   const stopRail = () => window.clearInterval(railTimer);
   const startRail = () => {
     stopRail();
 
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (railMotion.matches || !railVisible || document.hidden || section.contains(document.activeElement) || rail.scrollWidth <= rail.clientWidth + 1) {
       return;
     }
 
@@ -1869,35 +1513,60 @@ document.querySelectorAll("[data-rail-section]").forEach((section) => {
     }, 5200);
   };
 
+  // Browser image dragging would cancel the pointer gesture used to scroll.
+  rail.addEventListener("dragstart", (event) => event.preventDefault());
+
   rail.addEventListener("pointerdown", (event) => {
-    dragging = true;
+    if (!event.isPrimary || event.button !== 0) return;
+    trackingPointer = true;
+    dragged = false;
     startX = event.clientX;
+    startY = event.clientY;
     startScroll = rail.scrollLeft;
-    rail.classList.add("is-dragging");
-    rail.setPointerCapture?.(event.pointerId);
     stopRail();
   });
 
   rail.addEventListener("pointermove", (event) => {
+    if (!trackingPointer) return;
+    const delta = event.clientX - startX;
+    const vertical = event.clientY - startY;
     if (!dragging) {
-      return;
+      if (Math.abs(vertical) >= 8 && Math.abs(vertical) > Math.abs(delta)) {
+        trackingPointer = false;
+        return;
+      }
+      if (Math.abs(delta) < 8) return;
+      dragging = true;
+      dragged = true;
+      rail.classList.add("is-dragging");
+      rail.setPointerCapture?.(event.pointerId);
     }
-
-    rail.scrollLeft = startScroll - (event.clientX - startX);
+    event.preventDefault();
+    rail.scrollLeft = startScroll - delta;
   });
 
   rail.addEventListener("pointerup", (event) => {
+    trackingPointer = false;
     dragging = false;
     rail.classList.remove("is-dragging");
-    rail.releasePointerCapture?.(event.pointerId);
+    if (rail.hasPointerCapture?.(event.pointerId)) rail.releasePointerCapture(event.pointerId);
     startRail();
   });
 
   rail.addEventListener("pointercancel", () => {
+    trackingPointer = false;
     dragging = false;
+    dragged = false;
     rail.classList.remove("is-dragging");
     startRail();
   });
+
+  rail.addEventListener("click", (event) => {
+    if (!dragged) return;
+    dragged = false;
+    event.preventDefault();
+    event.stopPropagation();
+  }, true);
 
   rail.addEventListener("keydown", (event) => {
     if (event.key === "ArrowLeft") {
@@ -1914,8 +1583,13 @@ document.querySelectorAll("[data-rail-section]").forEach((section) => {
   section.addEventListener("mouseenter", stopRail);
   section.addEventListener("mouseleave", startRail);
   section.addEventListener("focusin", stopRail);
-  section.addEventListener("focusout", startRail);
-  startRail();
+  section.addEventListener("focusout", () => requestAnimationFrame(startRail));
+  railMotion.addEventListener("change", startRail);
+  document.addEventListener("visibilitychange", startRail);
+  new IntersectionObserver(([entry]) => {
+    railVisible = entry.isIntersecting;
+    startRail();
+  }, { threshold: 0.2 }).observe(rail);
 });
 
 document.querySelectorAll("[data-scroll-target]").forEach((button) => {
@@ -2009,7 +1683,6 @@ function ensureScrollReveal() {
       [
         ".section-copy",
         ".section-heading",
-        ".food-card",
         ".photo-link",
         ".award-box",
         ".award-tile",
@@ -2085,7 +1758,7 @@ document.querySelectorAll("[data-menu-browser]").forEach((browser) => {
   }
 
   function getMenuItem(card) {
-    return menuItemsByTitle.get(getCardTitle(card));
+    return siteConfig.menu.items.find(item => item.id === card.dataset.menuId) || menuItemsByTitle.get(getCardTitle(card));
   }
 
   function getCardLocations(card) {
@@ -2138,11 +1811,11 @@ document.querySelectorAll("[data-menu-browser]").forEach((browser) => {
     }
 
     if (links) {
-      const winePdf = selected?.drinksPdf || locationDetails["hong-kong"].drinksPdf;
+      const winePdf = sitePath(siteConfig, selected?.drinksPdf || (activeLocation === "all" ? siteConfig.menu.drinksPdf : ""));
       const cuisinePdf = selected?.cuisinePdf;
       links.innerHTML = isDrinkPage
-        ? `<a class="cut-button small-button" href="${winePdf}" target="_blank" rel="noopener">Wine List</a>`
-        : `${cuisinePdf ? `<a class="cut-button small-button" href="${cuisinePdf}" target="_blank" rel="noopener">Menu PDF</a>` : ""}<a class="cut-button small-button" href="/reserve/">Reserve selected location</a>`;
+        ? (winePdf ? `<a class="cut-button small-button" href="${escapeHtml(winePdf)}" target="_blank" rel="noopener">Wine List</a>` : "")
+        : `${cuisinePdf ? `<a class="cut-button small-button" href="${cuisinePdf}" target="_blank" rel="noopener">Menu PDF</a>` : ""}<a class="cut-button small-button" href="${sitePath(siteConfig, "/reserve/")}">Reserve selected location</a>`;
     }
   }
 
@@ -2213,6 +1886,7 @@ document.querySelectorAll("[data-menu-browser]").forEach((browser) => {
     updateUrlParams({ city: activeLocation, filter: activeFilter });
   }
 
+  if (params.has("city")) savePreferredLocation(activeLocation);
   createMenuLocationControls();
 
   if (requestedFilter && filters.some((button) => button.dataset.filter === requestedFilter)) {
@@ -2482,3 +2156,5 @@ document.addEventListener("keydown", (event) => {
 });
 
 restartHero();
+
+localizeInterface(document, siteConfig);

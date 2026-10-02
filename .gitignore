@@ -1,5 +1,15 @@
 node_modules/
 dist/
+dist-template/
+dist-pages/
+public/
+.cache/
+.data/
+.env
+.env.local
+.env.*
+!.env.example
+test-results/
 .vite/
 
 reference/

@@ -1,7 +1,11 @@
 import { chromium } from "playwright";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { getRuntime, seedPreferences, loadImages } from "./check-utils.mjs";
 
-const baseUrl = process.env.CHECK_URL ?? "http://127.0.0.1:5173";
+const baseUrl = process.env.CHECK_URL ?? "http://127.0.0.1:4173";
 
+const runtime = await getRuntime(baseUrl);
 const pages = [
   { path: "/", name: "home" },
   { path: "/our-cuisine/", name: "cuisine" },
@@ -15,7 +19,7 @@ const pages = [
   { path: "/sustainability/", name: "sustainability" },
   { path: "/careers/", name: "careers" },
   { path: "/privacy-policy/", name: "privacy" },
-];
+ ].filter(page => runtime.routes.includes(page.path.split("?")[0])).map(page => page.path.startsWith("/location/") ? {...page, path: `/location/${runtime.locations[page.name.includes("dubai") ? Math.min(1,runtime.locations.length-1) : 0]}/`} : page);
 
 const viewports = [
   { name: "iphone-se", width: 320, height: 568, mobile: true },
@@ -53,21 +57,17 @@ for (const viewport of viewports) {
   const context = await browser.newContext({
     viewport: { width: viewport.width, height: viewport.height },
     isMobile: viewport.mobile,
+    reducedMotion: "reduce",
     hasTouch: viewport.mobile,
     deviceScaleFactor: viewport.mobile ? 2 : 1,
   });
-  await context.addInitScript(() => {
-    window.localStorage.setItem(
-      "mott32CookieChoice",
-      JSON.stringify({ necessary: true, analytics: true, marketing: true, savedAt: "visual-check" }),
-    );
-    window.sessionStorage.setItem("mott32VipSeen", "1");
-  });
+    await seedPreferences(context, runtime.slug);
 
   for (const pageInfo of pages) {
     const page = await context.newPage();
     const url = new URL(pageInfo.path, baseUrl).toString();
     await page.goto(url, { waitUntil: "networkidle" });
+    await loadImages(page);
 
     const metrics = await page.evaluate(() => {
       const html = document.documentElement;
@@ -130,7 +130,7 @@ for (const viewport of viewports) {
     }
 
     if (screenshotTargets.has(`${viewport.name}/${pageInfo.name}`)) {
-      const file = `/tmp/mott32-responsive-${pageInfo.name}-${viewport.name}.png`;
+      const file = join(tmpdir(), `${runtime.slug}-responsive-${pageInfo.name}-${viewport.name}.png`);
       await page.screenshot({ path: file, fullPage: true });
       notes.push(file);
     }

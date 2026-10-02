@@ -1,7 +1,11 @@
 import { chromium } from "playwright";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { getRuntime, seedPreferences, loadImages } from "./check-utils.mjs";
 
-const baseUrl = process.env.CHECK_URL ?? "http://127.0.0.1:5173";
+const baseUrl = process.env.CHECK_URL ?? "http://127.0.0.1:4173";
 const browser = await chromium.launch({ headless: true });
+const runtime = await getRuntime(baseUrl);
 const pages = [
   { path: "/", name: "home" },
   { path: "/our-cuisine/", name: "cuisine" },
@@ -14,24 +18,19 @@ const pages = [
   { path: "/sustainability/", name: "sustainability" },
   { path: "/careers/", name: "careers" },
   { path: "/privacy-policy/", name: "privacy" },
-];
+ ].filter(page => runtime.routes.includes(page.path.split("?")[0])).map(page => page.path.startsWith("/location/") ? {...page, path: `/location/${runtime.locations[page.name.includes("dubai") ? Math.min(1,runtime.locations.length-1) : 0]}/`} : page);
 
 for (const viewport of [
   { width: 1440, height: 1100, name: "desktop" },
   { width: 390, height: 844, name: "mobile" },
 ]) {
   for (const pageInfo of pages) {
-    const page = await browser.newPage({ viewport });
-    await page.addInitScript(() => {
-      window.localStorage.setItem(
-        "mott32CookieChoice",
-        JSON.stringify({ necessary: true, analytics: true, marketing: true, savedAt: "visual-check" }),
-      );
-      window.sessionStorage.setItem("mott32VipSeen", "1");
-    });
+    const page = await browser.newPage({ viewport, reducedMotion: "reduce" });
+    await seedPreferences(page, runtime.slug);
     const url = new URL(pageInfo.path, baseUrl).toString();
     await page.goto(url, { waitUntil: "networkidle" });
-    await page.screenshot({ path: `/tmp/mott32-clone-${pageInfo.name}-${viewport.name}.png`, fullPage: true });
+    await loadImages(page);
+    await page.screenshot({ path: join(tmpdir(), `${runtime.slug}-visual-${pageInfo.name}-${viewport.name}.png`), fullPage: true });
 
     const metrics = await page.evaluate(() => {
       const body = document.body;
